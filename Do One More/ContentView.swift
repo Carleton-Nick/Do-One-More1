@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State var exercises: [Exercise] = ContentView.loadExercises() // Load exercises on startup
+    @State var exercises: [Exercise] = UserDefaultsManager.loadExercises() // Load exercises on startup
     @State var selectedExerciseType: String = ""
     @State var setRecords: [SetRecord] = [SetRecord()]
     @State var savedWorkouts: [Workout] = []  // Ensure this is declared only once
@@ -155,7 +155,15 @@ struct ContentView: View {
                 }
             }
             .onAppear {
-                exercises = ContentView.loadExercises()
+                exercises = UserDefaultsManager.loadExercises()
+                
+                // Listen for exercise selection
+                NotificationCenter.default.addObserver(forName: Notification.Name("ExerciseSelected"), object: nil, queue: .main) { notification in
+                    if let exerciseName = notification.object as? String {
+                        selectedExerciseType = exerciseName
+                    }
+                }
+
                 if fromRoutine, let previousWorkout = findPreviousWorkout() {
                     setRecords = previousWorkout.sets
                 } else {
@@ -228,7 +236,7 @@ struct ContentView: View {
             let distance = record.distance?.isEmpty ?? true ? nil : record.distance
             let calories = record.calories?.isEmpty ?? true ? nil : record.calories
             let custom = record.custom?.isEmpty ?? true ? nil : record.custom
-
+            
             return SetRecord(weight: weight, reps: reps, elapsedTime: elapsedTime, distance: distance, calories: calories, custom: custom)
         }
 
@@ -253,20 +261,6 @@ struct ContentView: View {
     }
 
     // MARK: - Persistence Functions
-
-    static func saveExercises(_ exercises: [Exercise]) {
-        if let encoded = try? JSONEncoder().encode(exercises) {
-            UserDefaults.standard.set(encoded, forKey: "exercises")
-        }
-    }
-
-    static func loadExercises() -> [Exercise] {
-        if let data = UserDefaults.standard.data(forKey: "exercises"),
-           let decoded = try? JSONDecoder().decode([Exercise].self, from: data) {
-            return decoded
-        }
-        return []
-    }
 
     func loadSavedWorkouts() {
         if let savedWorkoutsData = UserDefaults.standard.data(forKey: "workouts"),

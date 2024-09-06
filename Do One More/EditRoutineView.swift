@@ -9,7 +9,7 @@ struct EditRoutineView: View {
     @State private var newExerciseType: String = ""
     @State private var showAlert = false // Alert for saving changes
     @State private var showingNewExerciseView = false // State for showing the NewExerciseView
-    @State var exercises: [Exercise] = ContentView.loadExercises() // Load exercises on startup
+    @State var exercises: [Exercise] = UserDefaultsManager.loadExercises() // Load exercises on startup
     @Environment(\.theme) var theme // Inject the global theme
     @Environment(\.dismiss) var dismiss
 
@@ -28,13 +28,13 @@ struct EditRoutineView: View {
                     .foregroundColor(theme.primaryColor)) {
                     TextField("", text: $newName)
                         .font(theme.secondaryFont)
-                        .foregroundColor(theme.primaryColor)
+                        .foregroundColor(.white) // Set input text color to white
                         .padding()
                         .background(theme.backgroundColor) // Set the background color to match the theme
                         .cornerRadius(5)
                         .overlay(
                             RoundedRectangle(cornerRadius: 5)
-                                .stroke(theme.primaryColor, lineWidth: 1)
+                                .stroke(theme.primaryColor, lineWidth: 1) // Keep the orange outline
                         )
                         .customPlaceholder(show: newName.isEmpty, placeholder: "Name") // Add placeholder text
                         .listRowBackground(theme.backgroundColor) // Remove the default white background for the row
@@ -52,6 +52,11 @@ struct EditRoutineView: View {
                                 selectedExercises.append(exercise)
                             }
                         }
+                        .foregroundColor(.white) // Set unselected exercise text to white
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(theme.primaryColor, lineWidth: 1) // Thin orange outline for unselected exercises
+                        )
                         .listRowBackground(theme.backgroundColor) // Set each row's background to match the theme
                     }
 
@@ -65,7 +70,7 @@ struct EditRoutineView: View {
                     .navigationDestination(isPresented: $showingNewExerciseView) {
                         NewExerciseView(exercises: $exercises)
                             .onDisappear {
-                                ContentView.saveExercises(exercises)
+                                UserDefaultsManager.saveExercises(exercises)
                                 if let lastCreatedExercise = exercises.last?.name {
                                     selectedExercises.append(lastCreatedExercise)
                                     exerciseTypes.append(lastCreatedExercise)

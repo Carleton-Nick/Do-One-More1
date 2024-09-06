@@ -1,15 +1,7 @@
-//
-//  RoutineListView.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 6/26/24.
-//
-
 import SwiftUI
 
 struct RoutineListView: View {
     @State private var routines: [Routine] = []
-    @State private var isEditing = false // Track edit mode
     @Environment(\.theme) var theme // Inject the global theme
 
     var body: some View {
@@ -32,22 +24,13 @@ struct RoutineListView: View {
                                             .stroke(theme.primaryColor, lineWidth: 1)
                                     )
                             }
-
-                            Spacer() // Push the move handle to the right
-
-                            if isEditing {
-                                // Custom move handle at the far right
-                                Image(systemName: "line.horizontal.3")
-                                    .foregroundColor(.orange) // Customize the handle color here
-                                    .padding(.leading, 8)
-                            }
+                            Spacer()
                         }
                         .listRowBackground(theme.backgroundColor)
                     }
-                    .onDelete(perform: deleteRoutine)
-                    .onMove(perform: moveRoutine)
+                    .onDelete(perform: deleteRoutine) // Swipe to delete
+                    .onMove(perform: moveRoutine)     // Tap and hold to reorder
                 }
-                .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
                 .scrollContentBackground(.hidden)
                 .listStyle(PlainListStyle())
             }
@@ -57,17 +40,7 @@ struct RoutineListView: View {
                     UnderlinedTitle(title: "Workout Routines")
                 }
                 ToolbarItemGroup(placement: .bottomBar) {
-                    // "Edit Routines" button with consistent styling
-                    Button(action: { isEditing.toggle() }) {
-                        Text(isEditing ? "Done" : "Edit Routines")
-                            .font(theme.secondaryFont)
-                            .foregroundColor(theme.buttonTextColor)
-                            .padding(theme.buttonPadding)
-                            .background(theme.buttonBackgroundColor)
-                            .cornerRadius(theme.buttonCornerRadius)
-                    }
-
-                    Spacer()
+                    Spacer() // Align the "Add Routine" button to the right
 
                     // "Add Routine" button with consistent styling
                     NavigationLink(destination: CreateRoutineView(routines: $routines)) {

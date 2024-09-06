@@ -1,10 +1,3 @@
-//
-//  CustomFormFieldStyle.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 8/20/24.
-//
-
 import SwiftUI
 
 struct CustomFormFieldStyle: ViewModifier {
@@ -16,7 +9,7 @@ struct CustomFormFieldStyle: ViewModifier {
             .padding(.horizontal, 12) // Adjust horizontal padding to fit your design
             .background(theme.backgroundColor) // Match the background with your app's theme
             .cornerRadius(5) // Optional: Rounds the corners slightly
-            .foregroundColor(theme.primaryColor)
+            .foregroundColor(.white) // Set the text input color to white
             .overlay(
                 RoundedRectangle(cornerRadius: 5)
                     .stroke(Color.orange, lineWidth: 1) // Optional: Add a thin border if needed

@@ -4,11 +4,16 @@ struct ExerciseListView: View {
     @Binding var exercises: [Exercise]
     @State private var showingNewExerciseView = false
     @State private var showingEditExerciseView: Exercise? = nil
-    @State private var editMode: EditMode = .inactive // Track the edit mode
+    @State private var sortAlphabetically = false // Track sort order
     @Environment(\.theme) var theme
 
+    // Sort by either A-Z or by Most Recent (Date Created)
     var sortedExercises: [Exercise] {
-        exercises.sorted { $0.name.lowercased() < $1.name.lowercased() }
+        if sortAlphabetically {
+            return exercises.sorted { $0.name.lowercased() < $1.name.lowercased() }
+        } else {
+            return exercises.sorted { $0.creationDate > $1.creationDate } // Sort by most recent first
+        }
     }
 
     var body: some View {
@@ -19,7 +24,7 @@ struct ExerciseListView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.bottom, 20)
 
-                // HStack for "Create New Exercise" and "Arrange/Delete" buttons
+                // HStack for "Create New Exercise" and "Sort" buttons
                 HStack {
                     // Create New Exercise button
                     Button(action: {
@@ -35,14 +40,11 @@ struct ExerciseListView: View {
 
                     Spacer()
 
-                    // Arrange/Delete button
+                    // Sort button
                     Button(action: {
-                        // Toggle edit mode
-                        withAnimation {
-                            editMode = editMode == .active ? .inactive : .active
-                        }
+                        sortAlphabetically.toggle() // Toggle sort order
                     }) {
-                        Text(editMode == .active ? "Done" : "Arrange/Delete")
+                        Text(sortAlphabetically ? "Sort by Date" : "Sort A-Z")
                             .foregroundColor(theme.primaryColor)
                             .padding(theme.buttonPadding)
                             .background(Color.black)
@@ -52,7 +54,7 @@ struct ExerciseListView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 10)
 
-                // List of sorted exercises
+                // List of sorted exercises using InsetListStyle
                 List {
                     ForEach(sortedExercises) { exercise in
                         HStack {
@@ -66,14 +68,15 @@ struct ExerciseListView: View {
                                 showingEditExerciseView = exercise // Trigger edit view for the exercise
                             }) {
                                 Text("Edit")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.white) // White color for the "Edit" link
                             }
                         }
+                        .listRowBackground(Color.black) // Black background for each exercise row
+                        .listRowSeparatorTint(theme.primaryColor) // Optional: Color for the separator
                     }
-                    .onDelete(perform: deleteExercise)
-                    .onMove(perform: moveExercise)
+                    .onDelete(perform: deleteExercise) // Swipe to delete
                 }
-                .environment(\.editMode, $editMode) // Set the edit mode
+                .listStyle(InsetListStyle()) // Use InsetListStyle for a cohesive, proper list look
                 .background(theme.backgroundColor)
                 .scrollContentBackground(.hidden) // Respect background color
 
@@ -83,30 +86,24 @@ struct ExerciseListView: View {
             .sheet(isPresented: $showingNewExerciseView) {
                 NewExerciseView(exercises: $exercises)
                     .onDisappear {
-                        ContentView.saveExercises(exercises)
+                        UserDefaultsManager.saveExercises(exercises)
                     }
             }
             .navigationDestination(item: $showingEditExerciseView) { exercise in
                 EditExerciseView(exercise: exercise, exercises: $exercises)
                     .onDisappear {
-                        ContentView.saveExercises(exercises)
+                        UserDefaultsManager.saveExercises(exercises)
                     }
             }
         }
     }
 
-    // MARK: - Delete and Move Functions
+    // MARK: - Delete Function
 
     // Handle deleting an exercise
     func deleteExercise(at offsets: IndexSet) {
         exercises.remove(atOffsets: offsets)
-        ContentView.saveExercises(exercises)
-    }
-
-    // Handle reordering exercises
-    func moveExercise(from source: IndexSet, to destination: Int) {
-        exercises.move(fromOffsets: source, toOffset: destination)
-        ContentView.saveExercises(exercises)
+        UserDefaultsManager.saveExercises(exercises)
     }
 }
 

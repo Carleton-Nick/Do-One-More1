@@ -4,6 +4,7 @@ struct Exercise: Codable, Hashable, Identifiable {
     var id = UUID() // Ensure each exercise has a unique ID
     var name: String
     var selectedMetrics: [ExerciseMetric]
+    var creationDate: Date = Date() // Add creation date with a default value of the current date and time
 
     static func == (lhs: Exercise, rhs: Exercise) -> Bool {
         return lhs.id == rhs.id && lhs.name == rhs.name && lhs.selectedMetrics == rhs.selectedMetrics

@@ -79,7 +79,7 @@ struct NewExerciseView: View {
         exercises.append(newExercise)
 
         // Save the updated exercises to UserDefaults
-        ContentView.saveExercises(exercises)
+        UserDefaultsManager.saveExercises(exercises)
 
         // Dismiss the current view
         presentationMode.wrappedValue.dismiss()

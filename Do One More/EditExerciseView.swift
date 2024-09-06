@@ -83,7 +83,7 @@ struct EditExerciseView: View {
             exercises[index].selectedMetrics = Array(selectedMetrics)
 
             // Save the updated exercises to UserDefaults
-            ContentView.saveExercises(exercises)
+            UserDefaultsManager.saveExercises(exercises)
         }
 
         // Dismiss the view after saving changes

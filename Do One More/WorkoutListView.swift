@@ -24,7 +24,7 @@ struct WorkoutListView: View {
                         )
 
                     // Display the date and time of the workout
-                    Text("Saved on \(formatTimestamp(workout.timestamp))")
+                    Text("\(formatTimestamp(workout.timestamp))")
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
 

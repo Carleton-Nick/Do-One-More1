@@ -6,7 +6,7 @@ struct CreateRoutineView: View {
     @State private var selectedExercises: [String] = []
     @State private var showAlert = false
     @State private var showingNewExerciseView = false
-    @State var exercises: [Exercise] = ContentView.loadExercises() // Load exercises on startup
+    @State var exercises: [Exercise] = UserDefaultsManager.loadExercises() // Load exercises on startup
     @Environment(\.theme) var theme // Inject the global theme
     @Environment(\.dismiss) var dismiss
 
@@ -62,7 +62,7 @@ struct CreateRoutineView: View {
                     .navigationDestination(isPresented: $showingNewExerciseView) {
                         NewExerciseView(exercises: $exercises)
                             .onDisappear {
-                                ContentView.saveExercises(exercises)
+                                UserDefaultsManager.saveExercises(exercises)
                                 if let lastCreatedExercise = exercises.last?.name {
                                     selectedExercises.append(lastCreatedExercise)
                                 }
@@ -96,7 +96,7 @@ struct CreateRoutineView: View {
             }
         }
         .onAppear {
-            exercises = ContentView.loadExercises() // Load latest exercises from global storage
+            exercises = UserDefaultsManager.loadExercises() // Load latest exercises from global storage
         }
     }
 
@@ -106,26 +106,8 @@ struct CreateRoutineView: View {
 
         let newRoutine = Routine(name: routineName, exercises: selectedExercises)
         routines.append(newRoutine)
-        if let encoded = try? JSONEncoder().encode(routines) {
-            UserDefaults.standard.set(encoded, forKey: "routines")
-        }
+        UserDefaultsManager.saveRoutines(routines)
         showAlert = true
-    }
-}
-
-struct UnderlinedTitle: View {
-    let title: String
-    @Environment(\.theme) var theme
-    
-    var body: some View {
-        VStack(spacing: 5) {
-            Text(title.uppercased())
-                .font(theme.primaryFont)
-                .foregroundColor(.white)
-            Rectangle()
-                .fill(theme.primaryColor)
-                .frame(height: 2)
-        }
     }
 }
 
