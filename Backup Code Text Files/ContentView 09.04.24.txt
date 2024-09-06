@@ -1,3 +1,6 @@
+// ContentView.swift 09.04.24
+// Good build to this point.  Created room on the main screen but putting the tracking fields at the top.  
+
 import SwiftUI
 
 struct ContentView: View {
@@ -169,47 +172,29 @@ struct ContentView: View {
     private func createTextField(for metric: ExerciseMetric, at index: Int) -> some View {
         switch metric {
         case .weight:
-            return AnyView(
-                TextField("Enter weight (lbs)", text: bindingForWeight(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].weight?.isEmpty ?? true, placeholder: "Enter weight (lbs)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for weight
-            )
+            return TextField("Enter weight (lbs)", text: bindingForWeight(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].weight?.isEmpty ?? true, placeholder: "Enter weight (lbs)")
         case .reps:
-            return AnyView(
-                TextField("Enter reps", text: bindingForReps(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Enter reps")
-                    .keyboardType(.numberPad)  // Numeric input for reps
-            )
+            return TextField("Enter reps", text: bindingForReps(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Enter reps")
         case .time:
-            return AnyView(
-                TextField("Enter time (minutes)", text: bindingForElapsedTime(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].elapsedTime?.isEmpty ?? true, placeholder: "Enter time (minutes)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for time
-            )
+            return TextField("Enter time (minutes)", text: bindingForElapsedTime(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].elapsedTime?.isEmpty ?? true, placeholder: "Enter time (minutes)")
         case .distance:
-            return AnyView(
-                TextField("Enter distance (miles)", text: bindingForDistance(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].distance?.isEmpty ?? true, placeholder: "Enter distance (miles)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for distance
-            )
+            return TextField("Enter distance (miles)", text: bindingForDistance(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].distance?.isEmpty ?? true, placeholder: "Enter distance (miles)")
         case .calories:
-            return AnyView(
-                TextField("Enter calories burned", text: bindingForCalories(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].calories?.isEmpty ?? true, placeholder: "Enter calories burned")
-                    .keyboardType(.numberPad)  // Numeric input for calories
-            )
+            return TextField("Enter calories burned", text: bindingForCalories(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].calories?.isEmpty ?? true, placeholder: "Enter calories burned")
         case .custom:
-            return AnyView(
-                TextField("Enter notes", text: bindingForCustomNotes(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].custom?.isEmpty ?? true, placeholder: "Enter notes")
-                    .keyboardType(.default)  // Alphanumeric input for custom notes
-            )
+            return TextField("Enter notes", text: bindingForCustomNotes(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].custom?.isEmpty ?? true, placeholder: "Enter notes")
         }
     }
 

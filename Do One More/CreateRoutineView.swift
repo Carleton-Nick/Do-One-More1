@@ -1,20 +1,18 @@
-//
-//  CreateRoutineView.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 6/26/24.
-//
-
 import SwiftUI
 
 struct CreateRoutineView: View {
     @Binding var routines: [Routine]
     @State private var routineName: String = ""
     @State private var selectedExercises: [String] = []
-    @State private var exerciseTypes: [String] = []
-    @State private var newExerciseType: String = ""
-    @State private var showAlert = false // Add state property for the alert
+    @State private var showAlert = false
+    @State private var showingNewExerciseView = false
+    @State var exercises: [Exercise] = ContentView.loadExercises() // Load exercises on startup
     @Environment(\.theme) var theme // Inject the global theme
+    @Environment(\.dismiss) var dismiss
+
+    var hasValidInput: Bool {
+        !routineName.isEmpty
+    }
 
     var body: some View {
         ZStack {
@@ -43,7 +41,7 @@ struct CreateRoutineView: View {
                 Section(header: Text("Select Your Exercises")
                     .font(theme.secondaryFont)
                     .foregroundColor(theme.primaryColor)) {
-                    ForEach(exerciseTypes, id: \.self) { exercise in
+                    ForEach(exercises.map { $0.name }, id: \.self) { exercise in
                         MultipleSelectionRow(title: exercise, isSelected: selectedExercises.contains(exercise)) {
                             if selectedExercises.contains(exercise) {
                                 selectedExercises.removeAll { $0 == exercise }
@@ -53,40 +51,42 @@ struct CreateRoutineView: View {
                         }
                         .listRowBackground(theme.backgroundColor) // Set each row's background to black
                     }
-                    HStack {
-                        TextField("", text: $newExerciseType)
-                            .font(theme.secondaryFont)
-                            .foregroundColor(theme.primaryColor)
-                            .padding()
-                            .background(theme.backgroundColor)
-                            .cornerRadius(5)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .stroke(theme.primaryColor, lineWidth: 1)
-                            )
-                            .customPlaceholder(show: newExerciseType.isEmpty, placeholder: "New Exercise") // Add placeholder text
 
-                        Button(action: addNewExerciseType) {
-                            Text("Add")
-                        }
-                        .customButtonStyle()
+                    // New Exercise Button
+                    Button("Create New Exercise") {
+                        showingNewExerciseView = true
                     }
-                    .listRowBackground(theme.backgroundColor) // Set the HStack's background to black
+                    .customButtonStyle() // Apply custom button style
+                    .background(theme.backgroundColor) // Override background for the button
+                    .listRowBackground(Color.clear) // Clear the background of the list row
+                    .navigationDestination(isPresented: $showingNewExerciseView) {
+                        NewExerciseView(exercises: $exercises)
+                            .onDisappear {
+                                ContentView.saveExercises(exercises)
+                                if let lastCreatedExercise = exercises.last?.name {
+                                    selectedExercises.append(lastCreatedExercise)
+                                }
+                            }
+                    }
                 }
 
                 // Save Routine Button
                 Section {
                     Button(action: saveRoutine) {
                         Text("Save Routine")
+                            .foregroundColor(hasValidInput ? theme.buttonTextColor : theme.secondaryColor) // Gray out if input is invalid
                     }
                     .customButtonStyle()
+                    .disabled(!hasValidInput) // Disable the button if the routine name is empty
                     .listRowBackground(theme.backgroundColor) // Remove the default white background
                 }
             }
             .background(theme.backgroundColor) // Apply the background color here
             .scrollContentBackground(.hidden) // Ensure the form background respects the theme color
-            .alert(isPresented: $showAlert) { // Show alert when routine is saved
-                Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")))
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")) {
+                    dismiss() // Dismiss the current view and go back to RoutineListView
+                })
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -95,54 +95,35 @@ struct CreateRoutineView: View {
                 UnderlinedTitle(title: "Create A Routine") // Customize the title text here
             }
         }
-        .onAppear(perform: loadExerciseTypes)
-    }
-
-    // Load existing exercise types from saved workouts and routines
-    func loadExerciseTypes() {
-        if let savedWorkouts = UserDefaults.standard.data(forKey: "workouts"),
-           let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
-            exerciseTypes = Array(Set(decodedWorkouts.map { $0.exerciseType })).sorted()
+        .onAppear {
+            exercises = ContentView.loadExercises() // Load latest exercises from global storage
         }
-
-        if let savedRoutines = UserDefaults.standard.data(forKey: "routines"),
-           let decodedRoutines = try? JSONDecoder().decode([Routine].self, from: savedRoutines) {
-            exerciseTypes.append(contentsOf: Array(Set(decodedRoutines.flatMap { $0.exercises })))
-        }
-
-        exerciseTypes = Array(Set(exerciseTypes)).sorted()
-    }
-
-    // Add a new exercise type to the list
-    func addNewExerciseType() {
-        guard !newExerciseType.isEmpty else { return }
-        exerciseTypes.append(newExerciseType)
-        exerciseTypes = exerciseTypes.sorted()
-        newExerciseType = ""
     }
 
     // Save the new routine
     func saveRoutine() {
+        guard !routineName.isEmpty else { return }
+
         let newRoutine = Routine(name: routineName, exercises: selectedExercises)
         routines.append(newRoutine)
         if let encoded = try? JSONEncoder().encode(routines) {
             UserDefaults.standard.set(encoded, forKey: "routines")
         }
-        showAlert = true // Trigger the alert
+        showAlert = true
     }
 }
 
 struct UnderlinedTitle: View {
     let title: String
-    @Environment(\.theme) var theme // Use your global theme
-
+    @Environment(\.theme) var theme
+    
     var body: some View {
         VStack(spacing: 5) {
-            Text(title.uppercased()) // Convert the title to uppercase
+            Text(title.uppercased())
                 .font(theme.primaryFont)
                 .foregroundColor(.white)
-            Rectangle() // The underline
-                .fill(theme.primaryColor) // Use your theme’s primary color (orange)
+            Rectangle()
+                .fill(theme.primaryColor)
                 .frame(height: 2)
         }
     }

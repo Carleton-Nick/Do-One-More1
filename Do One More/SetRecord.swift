@@ -1,21 +1,14 @@
-//
-//  SetRecord.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 8/15/24.
-//
-
 import Foundation
 
-struct SetRecord: Hashable, Codable {
-    var weight: String?
-    var reps: Int?
-    var metrics: Metrics? // Ensure this is included
-}
+struct SetRecord: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var weight: String?        // Weight in lbs
+    var reps: Int?             // Number of repetitions
+    var elapsedTime: String?   // Time for the set, in hh:mm:ss format
+    var distance: String?      // Distance in miles
+    var calories: String?      // Calories burned
+    var custom: String?        // Custom notes for the set
 
-struct Metrics: Hashable, Codable {
-    var elapsedTime: String
-    var distance: String
-    var calories: String
-    var custom: String
+    // Hashable and Equatable conformance is automatically synthesized by the compiler
+    // if all properties conform to Hashable and Equatable.
 }

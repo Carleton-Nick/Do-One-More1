@@ -1,10 +1,3 @@
-//
-//  WorkoutListView.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 6/26/24.
-//
-
 import SwiftUI
 
 struct WorkoutListView: View {
@@ -30,12 +23,49 @@ struct WorkoutListView: View {
                             alignment: .bottom
                         )
 
+                    // Display the date and time of the workout
+                    Text("Saved on \(formatTimestamp(workout.timestamp))")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+
                     // Display each set in the workout
                     ForEach(workout.sets, id: \.self) { set in
-                        let displayWeight = set.weight?.isEmpty ?? true ? "bodyweight" : set.weight!
-                        Text("Weight: \(displayWeight), Reps: \(set.reps ?? 0)")
-                            .font(theme.secondaryFont)
-                            .foregroundColor(.white)
+                        // First line: Weight and Reps
+                        if let weight = set.weight, let reps = set.reps {
+                            Text("Weight: \(weight), Reps: \(reps)")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(.white) // Set text color to white
+                        }
+
+                        // Second line: Time and Distance
+                        HStack {
+                            if let elapsedTime = set.elapsedTime, !elapsedTime.isEmpty {
+                                Text("Time: \(elapsedTime)")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white) // Set text color to white
+                            }
+
+                            if let distance = set.distance, !distance.isEmpty {
+                                Spacer() // Add spacing between Time and Distance
+                                Text("Distance: \(distance) miles")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white) // Set text color to white
+                            }
+                        }
+
+                        // Third line: Calories
+                        if let calories = set.calories, !calories.isEmpty {
+                            Text("Calories: \(calories)")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(.white) // Set text color to white
+                        }
+
+                        // Fourth line: Custom Notes
+                        if let custom = set.custom, !custom.isEmpty {
+                            Text("Notes: \(custom)")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(.white) // Set text color to white
+                        }
                     }
                 }
                 .padding(8)
@@ -60,6 +90,14 @@ struct WorkoutListView: View {
            let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
             workouts = decodedWorkouts
         }
+    }
+
+    // Helper function to format the timestamp
+    func formatTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 

@@ -1,10 +1,3 @@
-//
-//  EditRoutineView.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 6/26/24.
-//
-
 import SwiftUI
 
 struct EditRoutineView: View {
@@ -15,7 +8,14 @@ struct EditRoutineView: View {
     @State private var exerciseTypes: [String] = []
     @State private var newExerciseType: String = ""
     @State private var showAlert = false // Alert for saving changes
+    @State private var showingNewExerciseView = false // State for showing the NewExerciseView
+    @State var exercises: [Exercise] = ContentView.loadExercises() // Load exercises on startup
     @Environment(\.theme) var theme // Inject the global theme
+    @Environment(\.dismiss) var dismiss
+
+    var hasValidInput: Bool {
+        !newName.isEmpty
+    }
 
     var body: some View {
         ZStack {
@@ -52,37 +52,41 @@ struct EditRoutineView: View {
                                 selectedExercises.append(exercise)
                             }
                         }
-                        .listRowBackground(theme.backgroundColor) // Set each row's background to black
+                        .listRowBackground(theme.backgroundColor) // Set each row's background to match the theme
                     }
-                    HStack {
-                        TextField("", text: $newExerciseType)
-                            .font(theme.secondaryFont)
-                            .foregroundColor(theme.primaryColor)
-                            .padding()
-                            .background(theme.backgroundColor)
-                            .cornerRadius(5)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .stroke(theme.primaryColor, lineWidth: 1)
-                            )
-                            .customPlaceholder(show: newExerciseType.isEmpty, placeholder: "New Exercise") // Add placeholder text
 
-                        Button(action: addNewExerciseType) {
-                            Text("Add")
-                        }
-                        .customButtonStyle()
+                    // New Exercise Button
+                    Button("Create New Exercise") {
+                        showingNewExerciseView = true
                     }
-                    .listRowBackground(theme.backgroundColor) // Set the HStack's background to black
+                    .customButtonStyle() // Apply custom button style
+                    .background(theme.backgroundColor) // Override background for the button
+                    .listRowBackground(Color.clear) // Clear the background of the list row
+                    .navigationDestination(isPresented: $showingNewExerciseView) {
+                        NewExerciseView(exercises: $exercises)
+                            .onDisappear {
+                                ContentView.saveExercises(exercises)
+                                if let lastCreatedExercise = exercises.last?.name {
+                                    selectedExercises.append(lastCreatedExercise)
+                                    exerciseTypes.append(lastCreatedExercise)
+                                    exerciseTypes = exerciseTypes.sorted()
+                                }
+                            }
+                    }
                 }
 
                 // Save Changes Button
                 Section {
                     Button(action: saveChanges) {
                         Text("Save Changes")
+                            .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
                     }
                     .customButtonStyle()
+                    .disabled(!hasValidInput) // Disable button if no valid input
                     .alert(isPresented: $showAlert) {
-                        Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")))
+                        Alert(title: Text("Changes Saved"), message: nil, dismissButton: .default(Text("OK")) {
+                            dismiss() // Dismiss the current view and go back to RoutineListView
+                        })
                     }
                     .listRowBackground(theme.backgroundColor) // Remove the default white background
                 }
@@ -118,21 +122,15 @@ struct EditRoutineView: View {
         exerciseTypes = Array(Set(exerciseTypes)).sorted()
     }
 
-    // Add a new exercise type to the list
-    func addNewExerciseType() {
-        guard !newExerciseType.isEmpty else { return }
-        exerciseTypes.append(newExerciseType)
-        exerciseTypes = exerciseTypes.sorted()
-        newExerciseType = ""
-    }
-
     // Save the updated routine
     func saveChanges() {
+        guard !newName.isEmpty else { return }
+
         if let index = routines.firstIndex(of: routine) {
             routines[index].name = newName
             routines[index].exercises = selectedExercises
             saveRoutines()
-            showAlert = true // Show confirmation alert
+            showAlert = true
         }
     }
 

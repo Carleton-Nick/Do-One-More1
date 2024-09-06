@@ -1,3 +1,7 @@
+// ContentView.swift. 09.02.24
+// Placeholder text is fixed.  Form Fields only take up 50% of horizontal view as desired.
+// Next :: "Add set" breaks the routine.  Need to make screen scroll.
+
 import SwiftUI
 
 struct ContentView: View {
@@ -26,107 +30,116 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                // Moved the form content to the top
-                VStack {
-                    // Exercise Picker Wheel with dynamic placeholder text
-                    HStack {
-                        Picker(selection: $selectedExerciseType, label: Text("")) {
-                            if exercises.isEmpty {
-                                Text("Create a new exercise first")
-                                    .foregroundColor(.gray)
-                            } else {
-                                Text("Choose an exercise")
-                                    .foregroundColor(.gray)
-                                    .tag("")
+                Spacer(minLength: 0)
 
-                                ForEach(exercises.sorted(by: { $0.name < $1.name }).map { $0.name }, id: \.self) { exercise in
-                                    Text(exercise)
-                                        .foregroundColor(theme.primaryColor)
-                                }
-                            }
-                        }
-                        .padding(.leading, 5)
-                        .onChange(of: selectedExerciseType) {
-                            if exercises.contains(where: { $0.name == selectedExerciseType }) {
-                                setRecords = [SetRecord()]
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
-                    }
-                    .padding(.horizontal)
+                Text("Choose Exercise")
+                    .customSectionHeaderStyle()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.bottom, 5)
 
-                    if let currentExercise = exercises.first(where: { $0.name == selectedExerciseType }) {
-                        ForEach(Array(setRecords.enumerated()), id: \.offset) { index, _ in
-                            let metrics = currentExercise.selectedMetrics
-                            ForEach(0..<metrics.count, id: \.self) { metricIndex in
-                                if metricIndex % 2 == 0 {
-                                    HStack {
-                                        createTextField(for: metrics[metricIndex], at: index)
-                                            .frame(maxWidth: .infinity)
-
-                                        if metricIndex + 1 < metrics.count {
-                                            createTextField(for: metrics[metricIndex + 1], at: index)
-                                                .frame(maxWidth: .infinity)
-                                        } else {
-                                            Spacer()
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                    }
-                                }
+                // Exercise Picker with dynamic placeholder text
+                HStack {
+                    Picker(selection: $selectedExerciseType, label: Text("")) {
+                        if exercises.isEmpty {
+                            Text("Create a new exercise first")
+                                .foregroundColor(.gray)
+                        } else {
+                            Text("Choose an exercise")
+                                .foregroundColor(.gray)
+                                .tag("")
+                            
+                            ForEach(exercises.map { $0.name }, id: \.self) { exercise in
+                                Text(exercise)
+                                    .foregroundColor(theme.primaryColor)
                             }
                         }
                     }
-
-                    HStack {
-                        Button(action: {
-                            setRecords.append(SetRecord())  // Add a new SetRecord to the list
-                        }) {
-                            Text("Add Set")
-                        }
-                        .font(theme.secondaryFont)
-                        .foregroundColor(theme.buttonTextColor)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
-
-                        Spacer()
-
-                        Button(action: saveWorkout) {
-                            Text("Save Workout")
-                                .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
-                        }
-                        .font(theme.secondaryFont)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
-                        .disabled(!hasValidInput)
-                        .alert(isPresented: $showAlert) {
-                            Alert(title: Text("Workout Saved!"), dismissButton: .default(Text("OK")) {
-                                clearInputFields()
-                            })
+                    .padding(.leading, 5)
+                    .onChange(of: selectedExerciseType) {
+                        if exercises.contains(where: { $0.name == selectedExerciseType }) {
+                            setRecords = [SetRecord()]
                         }
                     }
-                    .padding(.top, 10) // Add padding above the buttons
+                    .frame(maxWidth: .infinity)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
                 }
-                .padding(.top, 20) // Adds space below the title and underline
+                .padding(.horizontal)
 
+                if let currentExercise = exercises.first(where: { $0.name == selectedExerciseType }) {
+                    let metrics = currentExercise.selectedMetrics
+                    ForEach(0..<metrics.count, id: \.self) { index in
+                        if index % 2 == 0 {
+                            HStack {
+                                createTextField(for: metrics[index], at: 0)
+                                    .frame(maxWidth: .infinity)
+
+                                if index + 1 < metrics.count {
+                                    createTextField(for: metrics[index + 1], at: 0)
+                                        .frame(maxWidth: .infinity)
+                                } else {
+                                    Spacer()
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HStack {
+                    Button(action: {
+                        setRecords.append(SetRecord())
+                    }) {
+                        Text("Add Set")
+                    }
+                    .font(theme.secondaryFont)
+                    .foregroundColor(theme.buttonTextColor)
+                    .padding(theme.buttonPadding)
+                    .background(theme.buttonBackgroundColor)
+                    .cornerRadius(theme.buttonCornerRadius)
+
+                    Spacer()
+
+                    Button(action: saveWorkout) {
+                        Text("Save Set")
+                            .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
+                    }
+                    .font(theme.secondaryFont)
+                    .padding(theme.buttonPadding)
+                    .background(theme.buttonBackgroundColor)
+                    .cornerRadius(theme.buttonCornerRadius)
+                    .disabled(!hasValidInput)
+                    .alert(isPresented: $showAlert) {
+                        Alert(title: Text("Set Saved!"), dismissButton: .default(Text("OK")) {
+                            clearInputFields()
+                        })
+                    }
+                }
+                .padding(.top, 10) // Add padding above the buttons
+                
                 Spacer(minLength: 0)
 
                 VStack(spacing: 10) {
-                    // Button for Exercises
-                    NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
-                        Text("Exercises")
+                    Button("Create New Exercise") {
+                        showingNewExerciseView = true
                     }
                     .font(theme.secondaryFont)
-                    .foregroundColor(theme.buttonTextColor)
                     .padding(theme.buttonPadding)
                     .background(theme.buttonBackgroundColor)
+                    .foregroundColor(.white)
                     .cornerRadius(theme.buttonCornerRadius)
+                    .navigationDestination(isPresented: $showingNewExerciseView) {
+                        NewExerciseView(exercises: $exercises)
+                            .onDisappear {
+                                // Save the updated exercises when returning from NewExerciseView
+                                ContentView.saveExercises(exercises)
+                                if let lastCreatedExercise = exercises.last {
+                                    selectedExerciseType = lastCreatedExercise.name
+                                }
+                            }
+                    }
 
-                    // Button for Routines
                     NavigationLink(destination: RoutineListView()) {
-                        Text("Routines")
+                        Text("Manage Routines")
                     }
                     .font(theme.secondaryFont)
                     .foregroundColor(theme.buttonTextColor)
@@ -134,7 +147,6 @@ struct ContentView: View {
                     .background(theme.buttonBackgroundColor)
                     .cornerRadius(theme.buttonCornerRadius)
 
-                    // Button for Saved Workouts
                     NavigationLink(destination: WorkoutListView()) {
                         Text("View Saved Workouts")
                     }
@@ -169,47 +181,29 @@ struct ContentView: View {
     private func createTextField(for metric: ExerciseMetric, at index: Int) -> some View {
         switch metric {
         case .weight:
-            return AnyView(
-                TextField("Enter weight (lbs)", text: bindingForWeight(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].weight?.isEmpty ?? true, placeholder: "Enter weight (lbs)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for weight
-            )
+            return TextField("Enter weight (lbs)", text: bindingForWeight(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].weight?.isEmpty ?? true, placeholder: "Enter weight (lbs)")
         case .reps:
-            return AnyView(
-                TextField("Enter reps", text: bindingForReps(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Enter reps")
-                    .keyboardType(.numberPad)  // Numeric input for reps
-            )
+            return TextField("Enter reps", text: bindingForReps(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Enter reps")
         case .time:
-            return AnyView(
-                TextField("Enter time (minutes)", text: bindingForElapsedTime(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].elapsedTime?.isEmpty ?? true, placeholder: "Enter time (minutes)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for time
-            )
+            return TextField("Enter time (minutes)", text: bindingForElapsedTime(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].elapsedTime?.isEmpty ?? true, placeholder: "Enter time (minutes)")
         case .distance:
-            return AnyView(
-                TextField("Enter distance (miles)", text: bindingForDistance(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].distance?.isEmpty ?? true, placeholder: "Enter distance (miles)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for distance
-            )
+            return TextField("Enter distance (miles)", text: bindingForDistance(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].distance?.isEmpty ?? true, placeholder: "Enter distance (miles)")
         case .calories:
-            return AnyView(
-                TextField("Enter calories burned", text: bindingForCalories(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].calories?.isEmpty ?? true, placeholder: "Enter calories burned")
-                    .keyboardType(.numberPad)  // Numeric input for calories
-            )
+            return TextField("Enter calories burned", text: bindingForCalories(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].calories?.isEmpty ?? true, placeholder: "Enter calories burned")
         case .custom:
-            return AnyView(
-                TextField("Enter notes", text: bindingForCustomNotes(at: index))
-                    .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].custom?.isEmpty ?? true, placeholder: "Enter notes")
-                    .keyboardType(.default)  // Alphanumeric input for custom notes
-            )
+            return TextField("Enter notes", text: bindingForCustomNotes(at: index))
+                .customFormFieldStyle()
+                .customPlaceholder(show: setRecords[index].custom?.isEmpty ?? true, placeholder: "Enter notes")
         }
     }
 
@@ -342,3 +336,4 @@ extension ContentView {
         )
     }
 }
+

@@ -1,0 +1,382 @@
+08.29.24
+
+9:30am
+
+ContentView.swift
+
+Backup code before we add a new "build exercise" view that allows user to choose which metrics they want to track and show per exercise. 
+
+This file shows all 6 metric fields by default.  It also is unable to scroll and has a keyboard that won't go away unless you hit enter.  Otherwise, it does properly track and save workouts.
+
+//
+//  ContentView.swift
+//  Do One More
+//
+//  Created by Nick Carleton on 6/26/24.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    @State var selectedExerciseType: String
+    @State var exerciseType = ""
+    @State var setRecords: [SetRecord] = [SetRecord(weight: nil, reps: nil, elapsedTime: nil, distance: nil, calories: nil, custom: nil)]
+    @State var savedWorkouts: [Workout] = []
+    @State var exerciseTypes: [String] = []
+    @State private var showAlert = false
+    var fromRoutine: Bool
+    @Environment(\.theme) var theme
+
+    init(selectedExerciseType: String = "", fromRoutine: Bool = false) {
+        _selectedExerciseType = State(initialValue: selectedExerciseType)
+        self.fromRoutine = fromRoutine
+    }
+
+    var hasValidInput: Bool {
+        let validExercise = !selectedExerciseType.isEmpty || !exerciseType.isEmpty
+        let validDetailsInput = setRecords.allSatisfy { record in
+            record.weight?.isEmpty == false ||
+            record.reps != nil ||
+            record.elapsedTime?.isEmpty == false ||
+            record.distance?.isEmpty == false ||
+            record.calories?.isEmpty == false ||
+            record.custom?.isEmpty == false
+        }
+        return validExercise && validDetailsInput
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                Spacer(minLength: 0)
+                VStack(spacing: 20) {
+                    // Section: Choose or Create Exercise
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Choose or Create Exercise")
+                            .customSectionHeaderStyle()
+                        
+                        HStack {
+                            Picker(selection: $selectedExerciseType, label: Text("")) {
+                                Text("New").tag("New") // Add the "New" option
+                                ForEach(exerciseTypes, id: \.self) { exercise in
+                                    Text(exercise)
+                                        .foregroundColor(theme.primaryColor)
+                                }
+                            }
+                            .padding(.leading, 5)
+                            .onChange(of: selectedExerciseType) { oldValue, newValue in
+                                if newValue == "New" {
+                                    exerciseType = ""
+                                    setRecords = [SetRecord(weight: nil, reps: nil, elapsedTime: nil, distance: nil, calories: nil, custom: nil)]
+                                } else {
+                                    exerciseType = newValue
+                                    if findPreviousWorkout() == nil {
+                                        setRecords = [SetRecord(weight: nil, reps: nil, elapsedTime: nil, distance: nil, calories: nil, custom: nil)]
+                                    }
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
+                        }
+                        
+                        // Always show the text field when "New" is selected
+                        if selectedExerciseType == "New" {
+                            TextField("", text: $exerciseType)
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(theme.backgroundColor)
+                                .cornerRadius(5)
+                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
+                                .customPlaceholder(show: exerciseType.isEmpty, placeholder: "New Exercise Name")
+                        }
+                    }
+                    // Section: Exercise Details
+                    if selectedExerciseType == "New" || !exerciseType.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Exercise Details")
+                                .customSectionHeaderStyle()
+                            
+                            ForEach(Array(setRecords.enumerated()), id: \.offset) { index, _ in
+                                VStack {
+                                    // Existing Weight and Reps Input
+                                    HStack {
+                                        TextField("", text: bindingForWeight(at: index))
+                                            .customFormFieldStyle()
+                                            .customPlaceholder(show: setRecords[index].weight?.isEmpty ?? true, placeholder: "Weight (lbs)")
+                                        
+                                        TextField("", text: bindingForReps(at: index))
+                                            .customFormFieldStyle()
+                                            .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Reps")
+                                    }
+                                    
+                                    // New Metrics Inputs Arranged in Two Columns
+                                    HStack {
+                                        TextField("Time (Minutes)", text: bindingForElapsedTime(at: index))
+                                            .customFormFieldStyle()
+                                            .customPlaceholder(show: setRecords[index].elapsedTime?.isEmpty ?? true, placeholder: "Time (min)")
+                                        
+                                        TextField("Distance (Miles)", text: bindingForDistance(at: index))
+                                            .customFormFieldStyle()
+                                            .customPlaceholder(show: setRecords[index].distance?.isEmpty ?? true, placeholder: "Distance (miles)")
+                                    }
+                                    
+                                    HStack {
+                                        TextField("Calories Burned", text: bindingForCalories(at: index))
+                                            .customFormFieldStyle()
+                                            .customPlaceholder(show: setRecords[index].calories?.isEmpty ?? true, placeholder: "Calories")
+                                        
+                                        TextField("Notes", text: bindingForCustomNotes(at: index))
+                                            .customFormFieldStyle()
+                                            .customPlaceholder(show: setRecords[index].custom?.isEmpty ?? true, placeholder: "Notes")
+                                    }
+                                }
+                                .padding(.top, 10)
+                            }
+                        }
+                        
+                        // Place both buttons directly below the Exercise Details section
+                        HStack {
+                            Button(action: {
+                                setRecords.append(SetRecord(weight: nil, reps: nil, elapsedTime: nil, distance: nil, calories: nil, custom: nil))
+                            }) {
+                                Text("Add Set")
+                            }
+                            .font(theme.secondaryFont)
+                            .foregroundColor(theme.buttonTextColor)
+                            .padding(theme.buttonPadding)
+                            .background(theme.buttonBackgroundColor)
+                            .cornerRadius(theme.buttonCornerRadius)
+                            
+                            Spacer()
+                            
+                            Button(action: saveWorkout) {
+                                Text("Save Set")
+                                    .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray) // Grays out the text if input is invalid
+                            }
+                            .font(theme.secondaryFont)
+                            .padding(theme.buttonPadding)
+                            .background(theme.buttonBackgroundColor)
+                            .cornerRadius(theme.buttonCornerRadius)
+                            .disabled(!hasValidInput) // Disable button if no valid input
+                            .alert(isPresented: $showAlert) {
+                                Alert(
+                                    title: Text("Set Saved!"),
+                                    dismissButton: .default(Text("OK")) {
+                                        clearInputFields() // Clear fields after alert is dismissed
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    // Section: Previous Workout
+                    if let previousWorkout = findPreviousWorkout() {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Previous Workout")
+                                .customSectionHeaderStyle()
+                            
+                            ForEach(previousWorkout.sets, id: \.self) { set in
+                                let displayWeight = set.weight?.isEmpty ?? true ? "bodyweight" : set.weight!
+                                Text("Weight: \(displayWeight), Reps: \(set.reps ?? 0)")
+                                    .foregroundColor(theme.primaryColor)
+                                    .padding(8)
+                                    .background(theme.backgroundColor)
+                                    .cornerRadius(5)
+                                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
+                            }
+                        }
+                    }
+                }
+                .padding(20)
+                .background(theme.backgroundColor)
+                .cornerRadius(10)
+                Spacer(minLength: 0)
+                
+                // Navigation Links
+                VStack(spacing: 10) {
+                    NavigationLink(destination: RoutineListView()) {
+                        Text("Manage Routines")
+                    }
+                    .font(theme.secondaryFont)
+                    .foregroundColor(theme.buttonTextColor)
+                    .padding(theme.buttonPadding)
+                    .background(theme.buttonBackgroundColor)
+                    .cornerRadius(theme.buttonCornerRadius)
+                    
+                    NavigationLink(destination: WorkoutListView()) {
+                        Text("View Saved Workouts")
+                    }
+                    .font(theme.secondaryFont)
+                    .foregroundColor(theme.buttonTextColor)
+                    .padding(theme.buttonPadding)
+                    .background(theme.buttonBackgroundColor)
+                    .cornerRadius(theme.buttonCornerRadius)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(theme.backgroundColor.edgesIgnoringSafeArea(.all))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    UnderlinedTitle(title: "Do One More")
+                }
+            }
+            .onAppear(perform: loadSavedWorkouts)
+        }
+        .onAppear {
+            if fromRoutine {
+                exerciseType = selectedExerciseType
+                if let previousWorkout = findPreviousWorkout() {
+                    setRecords = previousWorkout.sets
+                } else {
+                    setRecords = [SetRecord(weight: nil, reps: nil, elapsedTime: nil, distance: nil, calories: nil, custom: nil)]
+                }
+            }
+            
+            // Default to "New" if no exercise is selected
+            if selectedExerciseType.isEmpty {
+                selectedExerciseType = "New"
+                exerciseType = ""
+            }
+        }
+    }
+    
+    
+    // MARK: - Workout Management Functions
+
+        func saveWorkout() {
+            guard hasValidInput else {
+                showAlert = true
+                return
+            }
+
+            let filledSetRecords = setRecords.compactMap { record -> SetRecord? in
+                let weight = record.weight?.isEmpty ?? true ? nil : record.weight
+                let reps = record.reps
+                let elapsedTime = record.elapsedTime?.isEmpty ?? true ? nil : record.elapsedTime
+                let distance = record.distance?.isEmpty ?? true ? nil : record.distance
+                let calories = record.calories?.isEmpty ?? true ? nil : record.calories
+                let custom = record.custom?.isEmpty ?? true ? nil : record.custom
+
+                return SetRecord(weight: weight, reps: reps, elapsedTime: elapsedTime, distance: distance, calories: calories, custom: custom)
+            }
+
+            let workout = Workout(exerciseType: exerciseType, sets: filledSetRecords)
+
+            if let index = savedWorkouts.firstIndex(where: { $0.exerciseType == workout.exerciseType }) {
+                savedWorkouts[index] = workout
+            } else {
+                savedWorkouts.append(workout)
+                exerciseTypes.append(workout.exerciseType)
+            }
+
+            saveExerciseTypes()
+
+            if let encoded = try? JSONEncoder().encode(savedWorkouts) {
+                UserDefaults.standard.set(encoded, forKey: "workouts")
+            }
+
+            // Show the alert to confirm the save
+            showAlert = true
+        }
+
+        func clearInputFields() {
+            exerciseType = ""
+            setRecords = [SetRecord(weight: nil, reps: nil, elapsedTime: nil, distance: nil, calories: nil, custom: nil)]
+            selectedExerciseType = "New"
+        }
+    
+    func loadSavedWorkouts() {
+        savedWorkouts = loadWorkouts()
+        let routineExercises = loadRoutineExercises()
+        exerciseTypes = Array(Set(savedWorkouts.map { $0.exerciseType } + routineExercises)).sorted()
+    }
+    
+    func findPreviousWorkout() -> Workout? {
+        return savedWorkouts.filter { $0.exerciseType == selectedExerciseType }.last
+    }
+    
+    func loadWorkouts() -> [Workout] {
+        if let savedWorkouts = UserDefaults.standard.data(forKey: "workouts"),
+           let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
+            return decodedWorkouts
+        }
+        return []
+    }
+    
+    func loadRoutineExercises() -> [String] {
+        if let savedRoutines = UserDefaults.standard.data(forKey: "routines"),
+           let decodedRoutines = try? JSONDecoder().decode([Routine].self, from: savedRoutines) {
+            return decodedRoutines.flatMap { $0.exercises }
+        }
+        return []
+    }
+
+    func saveExerciseTypes() {
+        let uniqueExerciseTypes = Array(Set(savedWorkouts.map { $0.exerciseType }))
+        if let encoded = try? JSONEncoder().encode(uniqueExerciseTypes) {
+            UserDefaults.standard.set(encoded, forKey: "exerciseTypes")
+        }
+    }
+
+    func loadExerciseTypes() {
+        if let savedExerciseTypes = UserDefaults.standard.data(forKey: "exerciseTypes"),
+           let decodedExerciseTypes = try? JSONDecoder().decode([String].self, from: savedExerciseTypes) {
+            exerciseTypes = decodedExerciseTypes
+        }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView(selectedExerciseType: "", fromRoutine: false)
+            .environment(\.theme, AppTheme()) // Inject the theme for a consistent preview
+    }
+}
+
+// MARK: - Extracted Binding Functions
+
+extension ContentView {
+    private func bindingForWeight(at index: Int) -> Binding<String> {
+        Binding(
+            get: { setRecords[index].weight ?? "" },
+            set: { setRecords[index].weight = $0 }
+        )
+    }
+
+    private func bindingForReps(at index: Int) -> Binding<String> {
+        Binding(
+            get: { setRecords[index].reps.map { String($0) } ?? "" },
+            set: { setRecords[index].reps = Int($0) }
+        )
+    }
+
+    private func bindingForElapsedTime(at index: Int) -> Binding<String> {
+        Binding(
+            get: { setRecords[index].elapsedTime ?? "" },
+            set: { setRecords[index].elapsedTime = $0 }
+        )
+    }
+
+    private func bindingForDistance(at index: Int) -> Binding<String> {
+        Binding(
+            get: { setRecords[index].distance ?? "" },
+            set: { setRecords[index].distance = $0 }
+        )
+    }
+
+    private func bindingForCalories(at index: Int) -> Binding<String> {
+        Binding(
+            get: { setRecords[index].calories ?? "" },
+            set: { setRecords[index].calories = $0 }
+        )
+    }
+
+    private func bindingForCustomNotes(at index: Int) -> Binding<String> {
+        Binding(
+            get: { setRecords[index].custom ?? "" },
+            set: { setRecords[index].custom = $0 }
+        )
+    }
+}
+                
+

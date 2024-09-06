@@ -1,3 +1,6 @@
+// 09.05.24
+// Trying to customize the elapsed time input field to be formatted for minutes and seconds.  Lots of progress today. 
+
 import SwiftUI
 
 struct ContentView: View {
