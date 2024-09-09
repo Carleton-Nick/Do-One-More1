@@ -3,7 +3,8 @@ import SwiftUI
 struct ExerciseListView: View {
     @Binding var exercises: [Exercise]
     @State private var showingNewExerciseView = false
-    @State private var showingEditExerciseView: Exercise? = nil
+    @State private var showingEditExerciseView = false
+    @State private var exerciseToEdit: Exercise? = nil
     @State private var sortAlphabetically = false // Track sort order
     @Environment(\.theme) var theme
 
@@ -65,7 +66,8 @@ struct ExerciseListView: View {
 
                             // "Edit" link
                             Button(action: {
-                                showingEditExerciseView = exercise // Trigger edit view for the exercise
+                                exerciseToEdit = exercise // Store the exercise to be edited
+                                showingEditExerciseView = true
                             }) {
                                 Text("Edit")
                                     .foregroundColor(.white) // White color for the "Edit" link
@@ -83,13 +85,17 @@ struct ExerciseListView: View {
                 Spacer()
             }
             .background(theme.backgroundColor.edgesIgnoringSafeArea(.all))
+
+            // Sheet for creating a new exercise
             .sheet(isPresented: $showingNewExerciseView) {
                 NewExerciseView(exercises: $exercises)
                     .onDisappear {
                         UserDefaultsManager.saveExercises(exercises)
                     }
             }
-            .navigationDestination(item: $showingEditExerciseView) { exercise in
+
+            // Sheet for editing an existing exercise
+            .sheet(item: $exerciseToEdit) { exercise in
                 EditExerciseView(exercise: exercise, exercises: $exercises)
                     .onDisappear {
                         UserDefaultsManager.saveExercises(exercises)

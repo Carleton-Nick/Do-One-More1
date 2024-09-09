@@ -1,10 +1,3 @@
-//
-//  MultipleSelectionRow.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 6/26/24.
-//
-
 import SwiftUI
 
 struct MultipleSelectionRow: View {
@@ -18,15 +11,19 @@ struct MultipleSelectionRow: View {
             HStack {
                 Text(title)
                     .font(theme.secondaryFont)
-                    .foregroundColor(isSelected ? .white : theme.primaryColor) // Change text color based on selection
+                    .foregroundColor(isSelected ? .white : theme.primaryColor) // White text when selected, primary color when not selected
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundColor(.white)
+                        .foregroundColor(.white) // White checkmark when selected
                 }
             }
             .padding()
-            .background(isSelected ? theme.primaryColor : theme.backgroundColor) // Change background color based on selection
+            .background(isSelected ? theme.primaryColor : theme.backgroundColor) // Solid orange background when selected
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.clear : theme.primaryColor, lineWidth: 2) // Orange border when not selected
+            )
             .cornerRadius(8)
         }
     }

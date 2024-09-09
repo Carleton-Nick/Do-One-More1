@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		E5375E962C74FBB70056F69D /* CustomSectionHeaderStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E952C74FBB70056F69D /* CustomSectionHeaderStyle.swift */; };
 		E5375E982C74FBD90056F69D /* CustomFormFieldStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E972C74FBD90056F69D /* CustomFormFieldStyle.swift */; };
-		E5375E9A2C750B030056F69D /* CustomPickerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E992C750B030056F69D /* CustomPickerStyle.swift */; };
 		E5375E9C2C750E1D0056F69D /* CustomPlaceholderModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E9B2C750E1D0056F69D /* CustomPlaceholderModifier.swift */; };
 		E56F0A2B2C8B725F00F277FF /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56F0A2A2C8B725F00F277FF /* UserDefaults.swift */; };
 		E56F0A2F2C8B767900F277FF /* UnderlinedTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56F0A2E2C8B767900F277FF /* UnderlinedTitle.swift */; };
+		E56F0A312C8D2B4000F277FF /* CustomPickerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56F0A302C8D2B4000F277FF /* CustomPickerStyle.swift */; };
 		E570D84D2C6E93EE00652705 /* SetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E570D84C2C6E93EE00652705 /* SetRecord.swift */; };
 		E585C7682C6EA71900FF46FE /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E585C7672C6EA71900FF46FE /* AppTheme.swift */; };
 		E585C76A2C6EA76200FF46FE /* CustomButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E585C7692C6EA76200FF46FE /* CustomButtonStyle.swift */; };
@@ -39,10 +39,10 @@
 /* Begin PBXFileReference section */
 		E5375E952C74FBB70056F69D /* CustomSectionHeaderStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSectionHeaderStyle.swift; sourceTree = "<group>"; };
 		E5375E972C74FBD90056F69D /* CustomFormFieldStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFormFieldStyle.swift; sourceTree = "<group>"; };
-		E5375E992C750B030056F69D /* CustomPickerStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPickerStyle.swift; sourceTree = "<group>"; };
 		E5375E9B2C750E1D0056F69D /* CustomPlaceholderModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPlaceholderModifier.swift; sourceTree = "<group>"; };
 		E56F0A2A2C8B725F00F277FF /* UserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaults.swift; sourceTree = "<group>"; };
 		E56F0A2E2C8B767900F277FF /* UnderlinedTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnderlinedTitle.swift; sourceTree = "<group>"; };
+		E56F0A302C8D2B4000F277FF /* CustomPickerStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPickerStyle.swift; sourceTree = "<group>"; };
 		E570D84C2C6E93EE00652705 /* SetRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRecord.swift; sourceTree = "<group>"; };
 		E585C7672C6EA71900FF46FE /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		E585C7692C6EA76200FF46FE /* CustomButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomButtonStyle.swift; sourceTree = "<group>"; };
@@ -109,13 +109,13 @@
 				E599649C2C2CD86900168FA6 /* Workout.swift */,
 				E570D84C2C6E93EE00652705 /* SetRecord.swift */,
 				E599648B2C2CD7F200168FA6 /* ContentView.swift */,
+				E56F0A302C8D2B4000F277FF /* CustomPickerStyle.swift */,
 				E56F0A2A2C8B725F00F277FF /* UserDefaults.swift */,
 				E5E90D962C8A984100884EAE /* ExerciseListView.swift */,
 				E5E90D9C2C8A991100884EAE /* EditExerciseView.swift */,
 				E5E90D9A2C8A98BD00884EAE /* NewExerciseView.swift */,
 				E5E90D942C8A97A100884EAE /* Exercise.swift */,
 				E5375E9B2C750E1D0056F69D /* CustomPlaceholderModifier.swift */,
-				E5375E992C750B030056F69D /* CustomPickerStyle.swift */,
 				E5375E952C74FBB70056F69D /* CustomSectionHeaderStyle.swift */,
 				E5375E972C74FBD90056F69D /* CustomFormFieldStyle.swift */,
 				E585C7672C6EA71900FF46FE /* AppTheme.swift */,
@@ -218,6 +218,7 @@
 				E59964A92C2CD9CC00168FA6 /* MultipleSelectionRow.swift in Sources */,
 				E5E90D9B2C8A98BD00884EAE /* NewExerciseView.swift in Sources */,
 				E59964962C2CD7F300168FA6 /* Do_One_More.xcdatamodeld in Sources */,
+				E56F0A312C8D2B4000F277FF /* CustomPickerStyle.swift in Sources */,
 				E585C7682C6EA71900FF46FE /* AppTheme.swift in Sources */,
 				E599649D2C2CD86900168FA6 /* Workout.swift in Sources */,
 				E59964A52C2CD91200168FA6 /* EditRoutineView.swift in Sources */,
@@ -229,7 +230,6 @@
 				E585C76A2C6EA76200FF46FE /* CustomButtonStyle.swift in Sources */,
 				E56F0A2B2C8B725F00F277FF /* UserDefaults.swift in Sources */,
 				E599648A2C2CD7F200168FA6 /* Do_One_MoreApp.swift in Sources */,
-				E5375E9A2C750B030056F69D /* CustomPickerStyle.swift in Sources */,
 				E59964A72C2CD94D00168FA6 /* CreateRoutineView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

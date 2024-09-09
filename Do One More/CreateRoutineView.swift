@@ -25,7 +25,7 @@ struct CreateRoutineView: View {
                     .foregroundColor(theme.primaryColor)) {
                     TextField("", text: $routineName)
                         .font(theme.secondaryFont)
-                        .foregroundColor(theme.primaryColor)
+                        .foregroundColor(.white)
                         .padding()
                         .background(theme.backgroundColor) // Set the background color to match the theme
                         .cornerRadius(5)

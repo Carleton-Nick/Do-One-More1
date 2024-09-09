@@ -30,22 +30,22 @@ struct ContentView: View {
                 VStack {
                     // Exercise Picker Wheel with dynamic placeholder text
                     HStack {
-                        Picker(selection: $selectedExerciseType, label: Text("")) {
-                            if exercises.isEmpty {
-                                Text("Create a new exercise first")
-                                    .foregroundColor(.gray)
-                            } else {
-                                Text("Choose an exercise")
-                                    .foregroundColor(.gray)
-                                    .tag("")
-
+                        Menu {
+                            Picker(selection: $selectedExerciseType) {
                                 ForEach(exercises.sorted(by: { $0.name < $1.name }).map { $0.name }, id: \.self) { exercise in
                                     Text(exercise)
-                                        .foregroundColor(theme.primaryColor)
+                                        .foregroundColor(.primary) // Set color for picker options
                                 }
+                            } label: {
+                                EmptyView()  // Hide Picker label inside the Menu
                             }
+                        } label: {
+                            Text(selectedExerciseType.isEmpty ? "Choose an exercise" : selectedExerciseType)
+                                .customPickerStyle()  // Apply the custom style
+                            Image(systemName: "chevron.up.chevron.down")
+                                .customPickerStyle()  // Apply the custom style
                         }
-                        .padding(.leading, 5)
+                        .padding(10)
                         .onChange(of: selectedExerciseType) {
                             if exercises.contains(where: { $0.name == selectedExerciseType }) {
                                 setRecords = [SetRecord()]
@@ -55,6 +55,7 @@ struct ContentView: View {
                         .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
                     }
                     .padding(.horizontal)
+                    .padding(.bottom, 3)
 
                     if let currentExercise = exercises.first(where: { $0.name == selectedExerciseType }) {
                         ForEach(Array(setRecords.enumerated()), id: \.offset) { index, _ in
@@ -73,6 +74,7 @@ struct ContentView: View {
                                                 .frame(maxWidth: .infinity)
                                         }
                                     }
+                                    .padding(.horizontal)
                                 }
                             }
                         }
@@ -107,10 +109,10 @@ struct ContentView: View {
                             })
                         }
                     }
-                    .padding(.top, 10) // Add padding above the buttons
+                    .padding(.top, 5) // Add padding above the buttons
+                    .padding(.horizontal)
                 }
                 .padding(.top, 20) // Adds space below the title and underline
-
                 Spacer(minLength: 0)
 
                 VStack(spacing: 10) {

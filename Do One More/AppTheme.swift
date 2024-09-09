@@ -19,7 +19,7 @@ struct AppTheme: EnvironmentKey {
 
     // Fonts
     let primaryFont: Font = .custom("Avenir Next", size: 20)
-    let secondaryFont: Font = .custom("Avenir", size: 20)
+    let secondaryFont: Font = .custom("Avenir", size: 18)
 
     // Button Styles
     let buttonCornerRadius: CGFloat = 8

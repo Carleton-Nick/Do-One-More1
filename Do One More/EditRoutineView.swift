@@ -43,7 +43,7 @@ struct EditRoutineView: View {
                 // Section: Edit Exercises
                 Section(header: Text("Edit Exercises")
                     .font(theme.secondaryFont)
-                    .foregroundColor(theme.primaryColor)) {
+                    .foregroundColor(.white)) {
                     ForEach(exerciseTypes, id: \.self) { exercise in
                         MultipleSelectionRow(title: exercise, isSelected: selectedExercises.contains(exercise)) {
                             if selectedExercises.contains(exercise) {
