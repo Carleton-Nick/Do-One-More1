@@ -10,62 +10,80 @@ struct WorkoutListView: View {
 
             List(workouts, id: \.exerciseType) { workout in
                 VStack(alignment: .leading, spacing: 10) {
-                    // Display the exercise type with an underline
+                    // Display the exercise type with a light orange border
                     Text(workout.exerciseType)
                         .font(theme.primaryFont)
                         .foregroundColor(.orange)
                         .padding(.vertical, 5)
+                        .padding(.horizontal)
                         .overlay(
-                            Rectangle()
-                                .frame(height: 2)
-                                .foregroundColor(theme.primaryColor) // Underline in orange
-                                .offset(y: 1), // Position the underline below the text
-                            alignment: .bottom
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.orange, lineWidth: 2) // Light orange border
                         )
-
-                    // Display the date and time of the workout
-                    Text("\(formatTimestamp(workout.timestamp))")
+                    // Display the date and time of the workout (on the same line as the exercise name)
+                    Text("Date: \(formatTimestamp(workout.timestamp))")
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
 
                     // Display each set in the workout
-                    ForEach(workout.sets, id: \.self) { set in
-                        // First line: Weight and Reps
-                        if let weight = set.weight, let reps = set.reps {
-                            Text("Weight: \(weight), Reps: \(reps)")
-                                .font(theme.secondaryFont)
-                                .foregroundColor(.white) // Set text color to white
-                        }
+                    ForEach(Array(workout.sets.enumerated()), id: \.offset) { index, set in
+                        VStack(alignment: .leading, spacing: 5) {
+                            // Set number with light orange underline
+                            Text("Set \(index + 1)")
+                                .font(theme.primaryFont)
+                                .foregroundColor(.white)
+                                .padding(.bottom, 2)
+                                .overlay(
+                                    Rectangle()
+                                        .frame(height: 1)
+                                        .foregroundColor(.orange) // Light orange underline
+                                        .offset(y: 2),
+                                    alignment: .bottom
+                                )
 
-                        // Second line: Time and Distance
-                        HStack {
+                            // Weight and Reps
+                            if let weight = set.weight {
+                                Text("Weight: \(weight) lbs")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white)
+                            }
+
+                            if let reps = set.reps {
+                                Text("Reps: \(reps)")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white)
+                            }
+
+                            // Time and Distance
                             if let elapsedTime = set.elapsedTime, !elapsedTime.isEmpty {
                                 Text("Time: \(elapsedTime)")
                                     .font(theme.secondaryFont)
-                                    .foregroundColor(.white) // Set text color to white
+                                    .foregroundColor(.white)
                             }
 
-                            if let distance = set.distance, !distance.isEmpty {
-                                Spacer() // Add spacing between Time and Distance
+                            if let distance = set.distance {
                                 Text("Distance: \(distance) miles")
                                     .font(theme.secondaryFont)
-                                    .foregroundColor(.white) // Set text color to white
+                                    .foregroundColor(.white)
+                            }
+
+                            // Calories
+                            if let calories = set.calories, !calories.isEmpty {
+                                Text("Calories: \(calories)")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white)
+                            }
+
+                            // Custom Notes
+                            if let custom = set.custom, !custom.isEmpty {
+                                Text("Notes: \(custom)")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white)
                             }
                         }
-
-                        // Third line: Calories
-                        if let calories = set.calories, !calories.isEmpty {
-                            Text("Calories: \(calories)")
-                                .font(theme.secondaryFont)
-                                .foregroundColor(.white) // Set text color to white
-                        }
-
-                        // Fourth line: Custom Notes
-                        if let custom = set.custom, !custom.isEmpty {
-                            Text("Notes: \(custom)")
-                                .font(theme.secondaryFont)
-                                .foregroundColor(.white) // Set text color to white
-                        }
+                        .padding(.vertical, 5) // Space between each set
+                        .background(Color.black.opacity(0.2)) // Light background for each set
+                        .cornerRadius(8)
                     }
                 }
                 .padding(8)

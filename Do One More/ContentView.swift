@@ -10,15 +10,20 @@ struct ContentView: View {
     var fromRoutine: Bool = false
     @Environment(\.theme) var theme
 
+    // The fixed array with the desired metric order
+    let metricOrder: [ExerciseMetric] = [
+        .weight, .reps, .time, .distance, .calories, .custom
+    ]
+
     var hasValidInput: Bool {
         let validExercise = !selectedExerciseType.isEmpty
         let validDetailsInput = setRecords.allSatisfy { record in
-            record.weight?.isEmpty == false ||
+            record.weight != nil ||
             record.reps != nil ||
-            record.elapsedTime?.isEmpty == false ||
-            record.distance?.isEmpty == false ||
-            record.calories?.isEmpty == false ||
-            record.custom?.isEmpty == false
+            record.elapsedTime != nil ||
+            record.distance != nil ||
+            record.calories != nil ||
+            record.custom != nil
         }
         return validExercise && validDetailsInput
     }
@@ -26,9 +31,8 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                // Moved the form content to the top
                 VStack {
-                    // Exercise Picker Wheel with dynamic placeholder text
+                    // Exercise Picker
                     HStack {
                         Menu {
                             Picker(selection: $selectedExerciseType) {
@@ -59,18 +63,46 @@ struct ContentView: View {
 
                     if let currentExercise = exercises.first(where: { $0.name == selectedExerciseType }) {
                         ForEach(Array(setRecords.enumerated()), id: \.offset) { index, _ in
-                            let metrics = currentExercise.selectedMetrics
-                            ForEach(0..<metrics.count, id: \.self) { metricIndex in
-                                if metricIndex % 2 == 0 {
+                            VStack {
+                                // Horizontal Stack for Weight and Reps, if selected
+                                if currentExercise.selectedMetrics.contains(.weight) || currentExercise.selectedMetrics.contains(.reps) {
                                     HStack {
-                                        createTextField(for: metrics[metricIndex], at: index)
-                                            .frame(maxWidth: .infinity)
-
-                                        if metricIndex + 1 < metrics.count {
-                                            createTextField(for: metrics[metricIndex + 1], at: index)
+                                        if currentExercise.selectedMetrics.contains(.weight) {
+                                            createTextField(for: .weight, at: index)
                                                 .frame(maxWidth: .infinity)
-                                        } else {
-                                            Spacer()
+                                        }
+                                        if currentExercise.selectedMetrics.contains(.reps) {
+                                            createTextField(for: .reps, at: index)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
+
+                                // Horizontal Stack for Time and Distance, if selected
+                                if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
+                                    HStack {
+                                        if currentExercise.selectedMetrics.contains(.time) {
+                                            createTextField(for: .time, at: index)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                        if currentExercise.selectedMetrics.contains(.distance) {
+                                            createTextField(for: .distance, at: index)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
+
+                                // Horizontal Stack for Calories and Custom Notes, if selected
+                                if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
+                                    HStack {
+                                        if currentExercise.selectedMetrics.contains(.calories) {
+                                            createTextField(for: .calories, at: index)
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                        if currentExercise.selectedMetrics.contains(.custom) {
+                                            createTextField(for: .custom, at: index)
                                                 .frame(maxWidth: .infinity)
                                         }
                                     }
@@ -109,10 +141,10 @@ struct ContentView: View {
                             })
                         }
                     }
-                    .padding(.top, 5) // Add padding above the buttons
+                    .padding(.top, 5)
                     .padding(.horizontal)
                 }
-                .padding(.top, 20) // Adds space below the title and underline
+                .padding(.top, 20)
                 Spacer(minLength: 0)
 
                 VStack(spacing: 10) {
@@ -158,8 +190,6 @@ struct ContentView: View {
             }
             .onAppear {
                 exercises = UserDefaultsManager.loadExercises()
-                
-                // Listen for exercise selection
                 NotificationCenter.default.addObserver(forName: Notification.Name("ExerciseSelected"), object: nil, queue: .main) { notification in
                     if let exerciseName = notification.object as? String {
                         selectedExerciseType = exerciseName
@@ -175,50 +205,49 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Helper Function to Create Text Fields
+    // Helper Function to Create Text Fields
     private func createTextField(for metric: ExerciseMetric, at index: Int) -> some View {
         switch metric {
         case .weight:
             return AnyView(
-                TextField("Enter weight (lbs)", text: bindingForWeight(at: index))
+                TextField("Weight (lbs)", text: bindingForWeight(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].weight?.isEmpty ?? true, placeholder: "Enter weight (lbs)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for weight
+                    .customPlaceholder(show: setRecords[index].weight == nil, placeholder: "Weight (lbs)")
+                    .keyboardType(.numberPad)
             )
         case .reps:
             return AnyView(
-                TextField("Enter reps", text: bindingForReps(at: index))
+                TextField("Reps", text: bindingForReps(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Enter reps")
-                    .keyboardType(.numberPad)  // Numeric input for reps
+                    .customPlaceholder(show: setRecords[index].reps == nil, placeholder: "Reps")
+                    .keyboardType(.numberPad)
             )
         case .time:
             return AnyView(
-                TextField("Enter time (minutes)", text: bindingForElapsedTime(at: index))
+                TextField("Time (h:m:s)", text: bindingForElapsedTime(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].elapsedTime?.isEmpty ?? true, placeholder: "Enter time (minutes)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for time
+                    .customPlaceholder(show: setRecords[index].elapsedTime == nil, placeholder: "Enter time")
             )
         case .distance:
             return AnyView(
                 TextField("Enter distance (miles)", text: bindingForDistance(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].distance?.isEmpty ?? true, placeholder: "Enter distance (miles)")
-                    .keyboardType(.decimalPad)  // Numeric input with decimal for distance
+                    .customPlaceholder(show: setRecords[index].distance == nil, placeholder: "Enter distance (miles)")
+                    .keyboardType(.decimalPad)
             )
         case .calories:
             return AnyView(
                 TextField("Enter calories burned", text: bindingForCalories(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].calories?.isEmpty ?? true, placeholder: "Enter calories burned")
-                    .keyboardType(.numberPad)  // Numeric input for calories
+                    .customPlaceholder(show: setRecords[index].calories == nil, placeholder: "Enter calories burned")
+                    .keyboardType(.numberPad)
             )
         case .custom:
             return AnyView(
                 TextField("Enter notes", text: bindingForCustomNotes(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].custom?.isEmpty ?? true, placeholder: "Enter notes")
-                    .keyboardType(.default)  // Alphanumeric input for custom notes
+                    .customPlaceholder(show: setRecords[index].custom == nil, placeholder: "Enter notes")
+                    .keyboardType(.default)
             )
         }
     }
@@ -232,14 +261,30 @@ struct ContentView: View {
         }
 
         let filledSetRecords = setRecords.compactMap { record -> SetRecord? in
-            let weight = record.weight?.isEmpty ?? true ? nil : record.weight
-            let reps = record.reps
-            let elapsedTime = record.elapsedTime?.isEmpty ?? true ? nil : record.elapsedTime
-            let distance = record.distance?.isEmpty ?? true ? nil : record.distance
-            let calories = record.calories?.isEmpty ?? true ? nil : record.calories
-            let custom = record.custom?.isEmpty ?? true ? nil : record.custom
+            // Since weight is already Int?, no need for isEmpty; use the value directly
+            let weight = record.weight
             
-            return SetRecord(weight: weight, reps: reps, elapsedTime: elapsedTime, distance: distance, calories: calories, custom: custom)
+            // Reps is already Int?, use it directly
+            let reps = record.reps
+
+            // Check if elapsedTime (String?) is empty or nil
+            let elapsedTime = record.elapsedTime?.isEmpty == false ? record.elapsedTime : nil
+
+            // Since distance is already Int?, no need for isEmpty; use the value directly
+            let distance = record.distance
+            
+            // Calories and custom notes, handle empty values
+            let calories = record.calories?.isEmpty == false ? record.calories : nil
+            let custom = record.custom?.isEmpty == false ? record.custom : nil
+
+            return SetRecord(
+                weight: weight,
+                reps: reps,
+                elapsedTime: elapsedTime,
+                distance: distance,
+                calories: calories,
+                custom: custom
+            )
         }
 
         let workout = Workout(exerciseType: selectedExerciseType, sets: filledSetRecords)
@@ -298,15 +343,27 @@ struct ContentView_Previews: PreviewProvider {
 extension ContentView {
     private func bindingForWeight(at index: Int) -> Binding<String> {
         Binding(
-            get: { setRecords[index].weight ?? "" },
-            set: { setRecords[index].weight = $0 }
+            get: {
+                if let weight = setRecords[index].weight {
+                    return String(weight) // Convert Int? to String for display
+                } else {
+                    return "" // Return an empty string if weight is nil
+                }
+            },
+            set: { newValue in
+                if let weight = Int(newValue) { // Convert the String back to Int
+                    setRecords[index].weight = weight
+                } else {
+                    setRecords[index].weight = nil // Set to nil if conversion fails
+                }
+            }
         )
     }
 
     private func bindingForReps(at index: Int) -> Binding<String> {
         Binding(
             get: { setRecords[index].reps.map { String($0) } ?? "" },
-            set: { setRecords[index].reps = Int($0) }
+            set: { setRecords[index].reps = Int($0) ?? nil }
         )
     }
 
@@ -319,8 +376,20 @@ extension ContentView {
 
     private func bindingForDistance(at index: Int) -> Binding<String> {
         Binding(
-            get: { setRecords[index].distance ?? "" },
-            set: { setRecords[index].distance = $0 }
+            get: {
+                if let distance = setRecords[index].distance {
+                    return String(distance) // Convert Double? to String for display
+                } else {
+                    return "" // Return an empty string if distance is nil
+                }
+            },
+            set: { newValue in
+                if let distance = Double(newValue) { // Convert String back to Double
+                    setRecords[index].distance = distance
+                } else {
+                    setRecords[index].distance = nil // Set to nil if conversion fails
+                }
+            }
         )
     }
 
