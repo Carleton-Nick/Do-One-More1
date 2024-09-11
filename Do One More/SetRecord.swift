@@ -2,12 +2,10 @@ import Foundation
 
 struct SetRecord: Identifiable, Codable, Hashable {
     var id = UUID()
-    var weight: Int?           // Weight in lbs (whole number)
-    var reps: Int?             // Number of repetitions (whole number)
-    var elapsedTime: String?   // Time for the set (alphanumeric input)
-    var distance: Double?      // Distance in miles (decimal number)
-    var calories: String?      // Calories burned (alphanumeric input)
-    var custom: String?        // Custom notes for the set (alphanumeric input)
-
-    // Hashable and Equatable conformance is automatically synthesized by the compiler
+    var weight: String?     // Change from Int? to String?
+    var reps: String?       // Change from Int? to String?
+    var elapsedTime: String?  // Already a String?
+    var distance: String?   // Change from Double? to String?
+    var calories: String?   // Change from Int? to String?
+    var custom: String?     // Already a String?
 }

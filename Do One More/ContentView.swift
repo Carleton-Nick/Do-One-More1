@@ -112,6 +112,55 @@ struct ContentView: View {
                         }
                     }
 
+                    // Display the most recent workout data
+                    if let recentWorkout = findMostRecentWorkout() {
+                        VStack(alignment: .leading) {
+                            // Display the formatted workout name and date
+                            Text("Last \(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
+                                .font(theme.primaryFont)
+                                .padding(.top, 10)
+                                .foregroundColor(.orange)
+
+                            // Iterate through the sets and display metrics
+                            ForEach(recentWorkout.sets, id: \.self) { set in
+                                HStack {
+                                    if let weight = set.weight {
+                                        Text("Weight: \(weight) lbs")
+                                            .font(theme.secondaryFont)
+                                            .foregroundColor(.white)
+                                    }
+                                    if let reps = set.reps {
+                                        Text("Reps: \(reps)")
+                                            .font(theme.secondaryFont)
+                                            .foregroundColor(.white)
+                                    }
+                                    if let time = set.elapsedTime {
+                                        Text("Time: \(time)")
+                                            .font(theme.secondaryFont)
+                                            .foregroundColor(.white)
+                                    }
+                                    if let distance = set.distance {
+                                        Text("Distance: \(distance) miles")
+                                            .font(theme.secondaryFont)
+                                            .foregroundColor(.white)
+                                    }
+                                    if let calories = set.calories {
+                                        Text("Calories: \(calories)")
+                                            .font(theme.secondaryFont)
+                                            .foregroundColor(.white)
+                                    }
+                                    if let notes = set.custom {
+                                        Text("Notes: \(notes)")
+                                            .font(theme.secondaryFont)
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .padding(.vertical, 5)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+
                     HStack {
                         Button(action: {
                             setRecords.append(SetRecord())  // Add a new SetRecord to the list
@@ -190,14 +239,18 @@ struct ContentView: View {
             }
             .onAppear {
                 exercises = UserDefaultsManager.loadExercises()
+                loadSavedWorkouts()
+
+                // Set up notification for exercise selection
                 NotificationCenter.default.addObserver(forName: Notification.Name("ExerciseSelected"), object: nil, queue: .main) { notification in
                     if let exerciseName = notification.object as? String {
                         selectedExerciseType = exerciseName
                     }
                 }
 
-                if fromRoutine, let previousWorkout = findPreviousWorkout() {
-                    setRecords = previousWorkout.sets
+                // Initialize input fields based on the selected exercise or routine
+                if fromRoutine {
+                    setRecords = [SetRecord()]
                 } else {
                     setRecords = [SetRecord()]
                 }
@@ -226,20 +279,21 @@ struct ContentView: View {
             return AnyView(
                 TextField("Time (h:m:s)", text: bindingForElapsedTime(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].elapsedTime == nil, placeholder: "Enter time")
+                    .customPlaceholder(show: setRecords[index].elapsedTime == nil, placeholder: "Elapsed Time")
+                    .keyboardType(.default)
             )
         case .distance:
             return AnyView(
-                TextField("Enter distance (miles)", text: bindingForDistance(at: index))
+                TextField("Distance", text: bindingForDistance(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].distance == nil, placeholder: "Enter distance (miles)")
-                    .keyboardType(.decimalPad)
+                    .customPlaceholder(show: setRecords[index].distance == nil, placeholder: "Distance")
+                    .keyboardType(.default)
             )
         case .calories:
             return AnyView(
-                TextField("Enter calories burned", text: bindingForCalories(at: index))
+                TextField("Calories burned", text: bindingForCalories(at: index))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: setRecords[index].calories == nil, placeholder: "Enter calories burned")
+                    .customPlaceholder(show: setRecords[index].calories == nil, placeholder: "Calories burned")
                     .keyboardType(.numberPad)
             )
         case .custom:
@@ -261,40 +315,23 @@ struct ContentView: View {
         }
 
         let filledSetRecords = setRecords.compactMap { record -> SetRecord? in
-            // Since weight is already Int?, no need for isEmpty; use the value directly
-            let weight = record.weight
-            
-            // Reps is already Int?, use it directly
-            let reps = record.reps
-
-            // Check if elapsedTime (String?) is empty or nil
-            let elapsedTime = record.elapsedTime?.isEmpty == false ? record.elapsedTime : nil
-
-            // Since distance is already Int?, no need for isEmpty; use the value directly
-            let distance = record.distance
-            
-            // Calories and custom notes, handle empty values
-            let calories = record.calories?.isEmpty == false ? record.calories : nil
-            let custom = record.custom?.isEmpty == false ? record.custom : nil
-
-            return SetRecord(
-                weight: weight,
-                reps: reps,
-                elapsedTime: elapsedTime,
-                distance: distance,
-                calories: calories,
-                custom: custom
+            SetRecord(
+                weight: record.weight,
+                reps: record.reps,
+                elapsedTime: record.elapsedTime,
+                distance: record.distance,
+                calories: record.calories,
+                custom: record.custom
             )
         }
 
-        let workout = Workout(exerciseType: selectedExerciseType, sets: filledSetRecords)
+        // Create a new workout with the current timestamp
+        let workout = Workout(exerciseType: selectedExerciseType, sets: filledSetRecords, timestamp: Date())
 
-        if let index = savedWorkouts.firstIndex(where: { $0.exerciseType == workout.exerciseType }) {
-            savedWorkouts[index] = workout
-        } else {
-            savedWorkouts.append(workout)
-        }
+        // Append the new workout to the history
+        savedWorkouts.append(workout)
 
+        // Save the updated list of workouts to UserDefaults
         if let encoded = try? JSONEncoder().encode(savedWorkouts) {
             UserDefaults.standard.set(encoded, forKey: "workouts")
         }
@@ -316,9 +353,15 @@ struct ContentView: View {
         }
     }
 
-    func findPreviousWorkout() -> Workout? {
+    func findMostRecentWorkout() -> Workout? {
         return savedWorkouts.filter { $0.exerciseType == selectedExerciseType }.last
     }
+}
+
+func formatTimestamp(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"  // Customize this format as needed
+    return formatter.string(from: date)
 }
 
 // Additional Persistence Functions
@@ -343,27 +386,15 @@ struct ContentView_Previews: PreviewProvider {
 extension ContentView {
     private func bindingForWeight(at index: Int) -> Binding<String> {
         Binding(
-            get: {
-                if let weight = setRecords[index].weight {
-                    return String(weight) // Convert Int? to String for display
-                } else {
-                    return "" // Return an empty string if weight is nil
-                }
-            },
-            set: { newValue in
-                if let weight = Int(newValue) { // Convert the String back to Int
-                    setRecords[index].weight = weight
-                } else {
-                    setRecords[index].weight = nil // Set to nil if conversion fails
-                }
-            }
+            get: { setRecords[index].weight ?? "" },  // Use String directly
+            set: { setRecords[index].weight = $0 }  // Set directly
         )
     }
 
     private func bindingForReps(at index: Int) -> Binding<String> {
         Binding(
-            get: { setRecords[index].reps.map { String($0) } ?? "" },
-            set: { setRecords[index].reps = Int($0) ?? nil }
+            get: { setRecords[index].reps ?? "" },
+            set: { setRecords[index].reps = $0 }
         )
     }
 
@@ -376,20 +407,8 @@ extension ContentView {
 
     private func bindingForDistance(at index: Int) -> Binding<String> {
         Binding(
-            get: {
-                if let distance = setRecords[index].distance {
-                    return String(distance) // Convert Double? to String for display
-                } else {
-                    return "" // Return an empty string if distance is nil
-                }
-            },
-            set: { newValue in
-                if let distance = Double(newValue) { // Convert String back to Double
-                    setRecords[index].distance = distance
-                } else {
-                    setRecords[index].distance = nil // Set to nil if conversion fails
-                }
-            }
+            get: { setRecords[index].distance ?? "" },
+            set: { setRecords[index].distance = $0 }
         )
     }
 

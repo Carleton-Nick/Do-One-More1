@@ -97,6 +97,7 @@
 		E59964882C2CD7F200168FA6 /* Do One More */ = {
 			isa = PBXGroup;
 			children = (
+				E599648B2C2CD7F200168FA6 /* ContentView.swift */,
 				E59964892C2CD7F200168FA6 /* Do_One_MoreApp.swift */,
 				E59964AA2C2CD9E900168FA6 /* WorkoutListView.swift */,
 				E59964A82C2CD9CC00168FA6 /* MultipleSelectionRow.swift */,
@@ -108,7 +109,6 @@
 				E599649E2C2CD88500168FA6 /* Routine.swift */,
 				E599649C2C2CD86900168FA6 /* Workout.swift */,
 				E570D84C2C6E93EE00652705 /* SetRecord.swift */,
-				E599648B2C2CD7F200168FA6 /* ContentView.swift */,
 				E56F0A302C8D2B4000F277FF /* CustomPickerStyle.swift */,
 				E56F0A2A2C8B725F00F277FF /* UserDefaults.swift */,
 				E5E90D962C8A984100884EAE /* ExerciseListView.swift */,
