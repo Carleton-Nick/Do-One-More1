@@ -369,7 +369,9 @@ func formatTimestamp(_ date: Date) -> String {
 func loadRoutineExercises() -> [String] {
     if let savedRoutines = UserDefaults.standard.data(forKey: "routines"),
        let decodedRoutines = try? JSONDecoder().decode([Routine].self, from: savedRoutines) {
-        return decodedRoutines.flatMap { $0.exercises }
+        return decodedRoutines.flatMap { routine in
+            routine.exercises.map { $0.name }  // Extract the name of each exercise
+        }
     }
     return []
 }

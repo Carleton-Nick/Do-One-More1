@@ -18,9 +18,9 @@ struct RoutineDetailView: View {
                 List {
                     ForEach(routine.exercises, id: \.self) { exercise in
                         NavigationLink(
-                            destination: ContentView(selectedExerciseType: exercise, fromRoutine: true)
+                            destination: ContentView(selectedExerciseType: exercise.name, fromRoutine: true)
                         ) {
-                            Text(exercise)
+                            Text(exercise.name) // Updated to display exercise name
                                 .font(theme.secondaryFont) // Apply theme font
                                 .foregroundColor(theme.primaryColor) // Apply theme text color
                                 .frame(maxWidth: .infinity, alignment: .center) // Center the text and span the full width
@@ -53,7 +53,7 @@ struct RoutineDetailView: View {
 
 struct RoutineDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        RoutineDetailView(routine: Routine(name: "Sample Routine", exercises: ["Bench Press", "Squat"]), routines: .constant([]))
+        RoutineDetailView(routine: Routine(name: "Sample Routine", exercises: [Exercise(name: "Bench Press", selectedMetrics: [])]), routines: .constant([]))
             .environment(\.theme, AppTheme()) // Preview with the theme applied
     }
 }

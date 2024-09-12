@@ -2,29 +2,29 @@ import SwiftUI
 
 struct MultipleSelectionRow: View {
     let title: String
-    var isSelected: Bool
-    var action: () -> Void
-    @Environment(\.theme) var theme // Inject the global theme
+    let isSelected: Bool
+    let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack {
                 Text(title)
-                    .font(theme.secondaryFont)
-                    .foregroundColor(isSelected ? .white : theme.primaryColor) // White text when selected, primary color when not selected
+                    .foregroundColor(isSelected ? .white : .orange) // White text when selected, orange when unselected
+                    .padding(.leading, 10) // Add leading padding to create space from the left edge
+
                 Spacer()
+                
                 if isSelected {
                     Image(systemName: "checkmark")
                         .foregroundColor(.white) // White checkmark when selected
+                        .padding(.trailing, 10) // Add some trailing padding for the checkmark
                 }
             }
-            .padding()
-            .background(isSelected ? theme.primaryColor : theme.backgroundColor) // Solid orange background when selected
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.clear : theme.primaryColor, lineWidth: 2) // Orange border when not selected
-            )
-            .cornerRadius(8)
+            .padding(.vertical, 12) // Consistent vertical padding
+            .background(isSelected ? Color.orange : Color.black) // Orange background when selected, black when unselected
+            .frame(maxWidth: .infinity, alignment: .leading) // Ensure it spans the entire width and aligns left
         }
+        .buttonStyle(PlainButtonStyle()) // Remove default button padding and styling
+        .listRowInsets(EdgeInsets()) // Remove extra list row insets
     }
 }

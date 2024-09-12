@@ -1,3 +1,7 @@
+// CreateRoutineView.swift
+// Making tons of changes, trying to implement nameable/moveable custom headers.  On that journey, it's transformed into a page where you can create a routine from an "All Exercises" list that populates a "Selected Exercises" list as you build.  
+// This version still has appearance issues, but it builds, so I'm backing it up. 
+
 import SwiftUI
 
 struct CreateRoutineView: View {
@@ -30,7 +34,7 @@ struct CreateRoutineView: View {
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
                         .padding()
-                        .background(theme.backgroundColor) // Set the background to match the theme
+                        .background(theme.backgroundColor) // Remove white background
                         .cornerRadius(5)
                         .overlay(
                             RoundedRectangle(cornerRadius: 5)
@@ -42,37 +46,33 @@ struct CreateRoutineView: View {
 
                 // All Exercises Section
                 VStack(alignment: .leading, spacing: 10) {
-                    // Centered Title: "Choose exercises for your routine"
-                    Text("Choose exercises for your routine")
+                    Text("All Exercises")
                         .font(theme.secondaryFont)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center) // Center the text
-                        .padding(.bottom, 5)
-                        .overlay(
-                            Rectangle()
-                                .frame(height: 2)
-                                .foregroundColor(theme.primaryColor) // Thin orange underline
-                                .offset(y: 10), // Position the underline below the text
-                            alignment: .bottomLeading
-                        )
+                        .foregroundColor(theme.primaryColor)
+                        .padding(.leading)
 
-                    // List of All Exercises with black background and custom styling
-                    List(exercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in // Sort alphabetically by name
-                            MultipleSelectionRow(title: exercise.name, isSelected: selectedExercises.contains(exercise)) {
-                                if selectedExercises.contains(exercise) {
-                                    selectedExercises.removeAll { $0 == exercise }
-                                } else {
-                                    selectedExercises.append(exercise)
-                                }
+                    // List of All Exercises
+                    List(exercises, id: \.self) { exercise in
+                        MultipleSelectionRow(title: exercise.name, isSelected: selectedExercises.contains(exercise)) {
+                            if selectedExercises.contains(exercise) {
+                                selectedExercises.removeAll { $0 == exercise }
+                            } else {
+                                selectedExercises.append(exercise)
                             }
-                        .listRowBackground(Color.clear) // Clear list background to match spacing style
+                        }
+                        .foregroundColor(.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(theme.primaryColor, lineWidth: 1)
+                        )
                     }
-                    .scrollContentBackground(.hidden) // Remove default white list background
-                    .background(theme.backgroundColor) // Set overall background to black
-                    .listStyle(InsetListStyle()) // Default inset list style (unstyled)
-                    .frame(maxWidth: .infinity)
+                    .listStyle(InsetListStyle())  // Use .listStyle(InsetListStyle()) instead of .insetGroupedListStyle
+                    .scrollContentBackground(.hidden) // Hide the white background
+                    .background(theme.backgroundColor) // Set to match app's theme
+                    .cornerRadius(8) // Corner radius to match the theme
+                    .padding(.horizontal)
 
-                    // Centered "Create New Exercise" Button
+                    // "Create New Exercise" Button
                     Button(action: {
                         showingNewExerciseView = true
                     }) {
@@ -83,7 +83,6 @@ struct CreateRoutineView: View {
                             .background(theme.buttonBackgroundColor)
                             .cornerRadius(theme.buttonCornerRadius)
                     }
-                    .frame(maxWidth: .infinity, alignment: .center) // Center the button
                     .sheet(isPresented: $showingNewExerciseView) {
                         NewExerciseView(exercises: $exercises)
                             .onDisappear {
@@ -93,36 +92,36 @@ struct CreateRoutineView: View {
                                 }
                             }
                     }
+                    .padding(.leading)
                 }
 
-                // Section: Selected Exercises
+                // Selected Exercises Section
                 VStack(alignment: .leading, spacing: 10) {
-                    // Centered Title: "Your Routine"
-                    Text("Your Routine")
+                    Text("Selected Exercises")
                         .font(theme.secondaryFont)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center) // Center the text
-                        .padding(.bottom, 5)
-                        .overlay(
-                            Rectangle()
-                                .frame(height: 2)
-                                .foregroundColor(theme.primaryColor) // Thin orange underline
-                                .offset(y: 10), // Position the underline below the text
-                            alignment: .bottomLeading
-                        )
+                        .foregroundColor(theme.primaryColor)
+                        .padding(.leading)
 
+                    // List of Selected Exercises
                     List {
-                        ForEach(selectedExercises) { exercise in
+                        ForEach(selectedExercises, id: \.self) { exercise in
                             Text(exercise.name)
-                                .foregroundColor(.white) // White text for selected exercises
-                                .padding(.vertical, 7) // Consistent padding
+                                .font(theme.secondaryFont)
+                                .foregroundColor(.white)
+                                .padding()
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(theme.primaryColor, lineWidth: 1)
+                                )
+                                .listRowBackground(theme.backgroundColor)
                         }
                         .onMove(perform: moveExercise)
-                        .listRowBackground(theme.primaryColor) // Set selected exercise row background to theme
                     }
-                    .scrollContentBackground(.hidden) // Remove default white list background
-                    .background(theme.backgroundColor) // Set overall background color to theme
-                    .listStyle(InsetListStyle()) // Default inset list style
+                    .listStyle(InsetListStyle())  // Changed to .listStyle(InsetListStyle()) for the "Selected Exercises" list
+                    .scrollContentBackground(.hidden) // Hide the default white background
+                    .background(theme.backgroundColor) // Match the background to the app’s theme
+                    .cornerRadius(8)
+                    .padding(.horizontal)
                     .toolbar {
                         EditButton() // To rearrange the selected exercises
                     }
@@ -137,7 +136,6 @@ struct CreateRoutineView: View {
                         .background(theme.buttonBackgroundColor)
                         .cornerRadius(theme.buttonCornerRadius)
                 }
-                .frame(maxWidth: .infinity, alignment: .center) // Center the button
                 .disabled(!hasValidInput)
                 .alert(isPresented: $showAlert) {
                     Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")) {

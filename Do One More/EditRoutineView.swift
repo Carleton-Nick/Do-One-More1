@@ -4,9 +4,9 @@ struct EditRoutineView: View {
     var routine: Routine
     @Binding var routines: [Routine]
     @State private var newName: String = ""
-    @State private var selectedExercises: [String] = []
-    @State private var exerciseTypes: [String] = []
-    @State private var newExerciseType: String = ""
+    @State private var selectedExercises: [Exercise] = []  // Changed to [Exercise]
+    @State private var exerciseTypes: [Exercise] = []  // Changed to [Exercise]
+    @State private var newExerciseType: Exercise?
     @State private var showAlert = false // Alert for saving changes
     @State private var showingNewExerciseView = false // State for showing the NewExerciseView
     @State var exercises: [Exercise] = UserDefaultsManager.loadExercises() // Load exercises on startup
@@ -21,31 +21,35 @@ struct EditRoutineView: View {
         ZStack {
             theme.backgroundColor.edgesIgnoringSafeArea(.all) // Set the entire view's background
 
-            Form {
+            VStack {
                 // Section: Routine Name
-                Section(header: Text("Routine Name")
-                    .font(theme.secondaryFont)
-                    .foregroundColor(theme.primaryColor)) {
-                    TextField("", text: $newName)
+                Form {
+                    Section(header: Text("Routine Name")
                         .font(theme.secondaryFont)
-                        .foregroundColor(.white) // Set input text color to white
-                        .padding()
-                        .background(theme.backgroundColor) // Set the background color to match the theme
-                        .cornerRadius(5)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 5)
-                                .stroke(theme.primaryColor, lineWidth: 1) // Keep the orange outline
-                        )
-                        .customPlaceholder(show: newName.isEmpty, placeholder: "Name") // Add placeholder text
-                        .listRowBackground(theme.backgroundColor) // Remove the default white background for the row
+                        .foregroundColor(theme.primaryColor)) {
+                        TextField("", text: $newName)
+                            .font(theme.secondaryFont)
+                            .foregroundColor(.white) // Set input text color to white
+                            .padding()
+                            .background(theme.backgroundColor) // Set the background color to match the theme
+                            .cornerRadius(5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .stroke(theme.primaryColor, lineWidth: 1) // Keep the orange outline
+                            )
+                            .customPlaceholder(show: newName.isEmpty, placeholder: "Name") // Add placeholder text
+                            .listRowBackground(theme.backgroundColor) // Remove the default white background for the row
+                    }
                 }
+                .padding(.bottom, 5)
 
-                // Section: Edit Exercises
-                Section(header: Text("Edit Exercises")
-                    .font(theme.secondaryFont)
-                    .foregroundColor(.white)) {
-                    ForEach(exerciseTypes, id: \.self) { exercise in
-                        MultipleSelectionRow(title: exercise, isSelected: selectedExercises.contains(exercise)) {
+                // Section: All Available Exercises
+                VStack(alignment: .leading) {
+                    Text("All Exercises").font(theme.secondaryFont).foregroundColor(theme.primaryColor)
+                        .padding(.leading)
+
+                    List(exerciseTypes, id: \.self) { exercise in
+                        MultipleSelectionRow(title: exercise.name, isSelected: selectedExercises.contains(exercise)) {
                             if selectedExercises.contains(exercise) {
                                 selectedExercises.removeAll { $0 == exercise }
                             } else {
@@ -59,45 +63,49 @@ struct EditRoutineView: View {
                         )
                         .listRowBackground(theme.backgroundColor) // Set each row's background to match the theme
                     }
+                    .listStyle(InsetGroupedListStyle())
+                }
+                .padding(.bottom, 10)
 
-                    // New Exercise Button
-                    Button("Create New Exercise") {
-                        showingNewExerciseView = true
+                // Section: Selected Exercises
+                VStack(alignment: .leading) {
+                    Text("Selected Exercises").font(theme.secondaryFont).foregroundColor(theme.primaryColor)
+                        .padding(.leading)
+
+                    List {
+                        ForEach(selectedExercises, id: \.self) { exercise in
+                            Text(exercise.name)
+                                .font(theme.secondaryFont)
+                                .foregroundColor(.white)
+                                .padding()
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(theme.primaryColor, lineWidth: 1)
+                                )
+                                .listRowBackground(theme.backgroundColor)
+                        }
+                        .onMove(perform: moveExercise)
                     }
-                    .customButtonStyle() // Apply custom button style
-                    .background(theme.backgroundColor) // Override background for the button
-                    .listRowBackground(Color.clear) // Clear the background of the list row
-                    .navigationDestination(isPresented: $showingNewExerciseView) {
-                        NewExerciseView(exercises: $exercises)
-                            .onDisappear {
-                                UserDefaultsManager.saveExercises(exercises)
-                                if let lastCreatedExercise = exercises.last?.name {
-                                    selectedExercises.append(lastCreatedExercise)
-                                    exerciseTypes.append(lastCreatedExercise)
-                                    exerciseTypes = exerciseTypes.sorted()
-                                }
-                            }
-                    }
+                    .listStyle(InsetGroupedListStyle())
+                    .toolbar { EditButton() }
                 }
 
                 // Save Changes Button
-                Section {
-                    Button(action: saveChanges) {
-                        Text("Save Changes")
-                            .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
-                    }
-                    .customButtonStyle()
-                    .disabled(!hasValidInput) // Disable button if no valid input
-                    .alert(isPresented: $showAlert) {
-                        Alert(title: Text("Changes Saved"), message: nil, dismissButton: .default(Text("OK")) {
-                            dismiss() // Dismiss the current view and go back to RoutineListView
-                        })
-                    }
-                    .listRowBackground(theme.backgroundColor) // Remove the default white background
+                Button(action: saveChanges) {
+                    Text("Save Changes")
+                        .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
+                }
+                .font(theme.secondaryFont)
+                .padding(theme.buttonPadding)
+                .background(theme.buttonBackgroundColor)
+                .cornerRadius(theme.buttonCornerRadius)
+                .disabled(!hasValidInput) // Disable button if no valid input
+                .alert(isPresented: $showAlert) {
+                    Alert(title: Text("Changes Saved"), message: nil, dismissButton: .default(Text("OK")) {
+                        dismiss() // Dismiss the current view and go back to RoutineListView
+                    })
                 }
             }
-            .background(theme.backgroundColor) // Apply the background color here
-            .scrollContentBackground(.hidden) // Ensure the form background respects the theme color
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -107,24 +115,19 @@ struct EditRoutineView: View {
         }
         .onAppear {
             newName = routine.name
-            selectedExercises = routine.exercises
+            selectedExercises = routine.exercises // Assign selected exercises from routine
             loadExerciseTypes()
         }
     }
 
     // Load existing exercise types from saved workouts and routines
     func loadExerciseTypes() {
-        if let savedWorkouts = UserDefaults.standard.data(forKey: "workouts"),
-           let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
-            exerciseTypes = Array(Set(decodedWorkouts.map { $0.exerciseType })).sorted()
-        }
+        exerciseTypes = Array(Set(exercises)).sorted { $0.name < $1.name }
+    }
 
-        if let savedRoutines = UserDefaults.standard.data(forKey: "routines"),
-           let decodedRoutines = try? JSONDecoder().decode([Routine].self, from: savedRoutines) {
-            exerciseTypes.append(contentsOf: Array(Set(decodedRoutines.flatMap { $0.exercises })))
-        }
-
-        exerciseTypes = Array(Set(exerciseTypes)).sorted()
+    // Reorder exercises in selected list
+    func moveExercise(from source: IndexSet, to destination: Int) {
+        selectedExercises.move(fromOffsets: source, toOffset: destination)
     }
 
     // Save the updated routine
@@ -148,7 +151,7 @@ struct EditRoutineView: View {
 
 struct EditRoutineView_Previews: PreviewProvider {
     static var previews: some View {
-        EditRoutineView(routine: Routine(name: "Sample Routine", exercises: ["Bench Press", "Squat"]), routines: .constant([]))
+        EditRoutineView(routine: Routine(name: "Sample Routine", exercises: [Exercise(name: "Bench Press", selectedMetrics: [.weight])]), routines: .constant([]))
             .environment(\.theme, AppTheme()) // Preview with the theme applied
     }
 }
