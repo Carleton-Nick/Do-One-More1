@@ -3,6 +3,7 @@ import SwiftUI
 struct MultipleSelectionRow: View {
     let title: String
     let isSelected: Bool
+    let isFlashing: Bool // New parameter to control flashing effect
     let action: () -> Void
 
     var body: some View {
@@ -21,7 +22,7 @@ struct MultipleSelectionRow: View {
                 }
             }
             .padding(.vertical, 12) // Consistent vertical padding
-            .background(isSelected ? Color.orange : Color.black) // Orange background when selected, black when unselected
+            .background(isFlashing ? Color.orange.opacity(0.5) : (isSelected ? Color.orange : Color.black)) // Flashing effect or background color
             .frame(maxWidth: .infinity, alignment: .leading) // Ensure it spans the entire width and aligns left
         }
         .buttonStyle(PlainButtonStyle()) // Remove default button padding and styling

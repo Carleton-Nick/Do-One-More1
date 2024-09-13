@@ -3,155 +3,263 @@ import SwiftUI
 struct EditRoutineView: View {
     var routine: Routine
     @Binding var routines: [Routine]
-    @State private var newName: String = ""
-    @State private var selectedExercises: [Exercise] = []  // Changed to [Exercise]
-    @State private var exerciseTypes: [Exercise] = []  // Changed to [Exercise]
-    @State private var newExerciseType: Exercise?
-    @State private var showAlert = false // Alert for saving changes
-    @State private var showingNewExerciseView = false // State for showing the NewExerciseView
-    @State var exercises: [Exercise] = UserDefaultsManager.loadExercises() // Load exercises on startup
-    @Environment(\.theme) var theme // Inject the global theme
+    @State private var routineName: String
+    @State private var selectedItems: [RoutineItem]
+    @State private var showAlert = false
+    @State private var showingNewExerciseView = false
+    @State private var showingHeaderAlert = false
+    @State private var headerName = ""
+    @State private var editingHeaderIndex: Int?
+    @State var exercises: [Exercise] = UserDefaultsManager.loadExercises()
+    @State private var flashItem: UUID? = nil // To store the ID of the item to flash
+    @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
 
+    init(routine: Routine, routines: Binding<[Routine]>) {
+        self.routine = routine
+        self._routines = routines
+        self._routineName = State(initialValue: routine.name)
+        self._selectedItems = State(initialValue: routine.exercises.map { .exercise($0) })
+    }
+
     var hasValidInput: Bool {
-        !newName.isEmpty
+        !routineName.isEmpty
     }
 
     var body: some View {
         ZStack {
-            theme.backgroundColor.edgesIgnoringSafeArea(.all) // Set the entire view's background
+            theme.backgroundColor.edgesIgnoringSafeArea(.all)
 
-            VStack {
+            VStack(alignment: .leading) {
                 // Section: Routine Name
-                Form {
-                    Section(header: Text("Routine Name")
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Routine Name")
                         .font(theme.secondaryFont)
-                        .foregroundColor(theme.primaryColor)) {
-                        TextField("", text: $newName)
-                            .font(theme.secondaryFont)
-                            .foregroundColor(.white) // Set input text color to white
-                            .padding()
-                            .background(theme.backgroundColor) // Set the background color to match the theme
-                            .cornerRadius(5)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .stroke(theme.primaryColor, lineWidth: 1) // Keep the orange outline
-                            )
-                            .customPlaceholder(show: newName.isEmpty, placeholder: "Name") // Add placeholder text
-                            .listRowBackground(theme.backgroundColor) // Remove the default white background for the row
-                    }
-                }
-                .padding(.bottom, 5)
+                        .foregroundColor(theme.primaryColor)
 
-                // Section: All Available Exercises
-                VStack(alignment: .leading) {
-                    Text("All Exercises").font(theme.secondaryFont).foregroundColor(theme.primaryColor)
-                        .padding(.leading)
-
-                    List(exerciseTypes, id: \.self) { exercise in
-                        MultipleSelectionRow(title: exercise.name, isSelected: selectedExercises.contains(exercise)) {
-                            if selectedExercises.contains(exercise) {
-                                selectedExercises.removeAll { $0 == exercise }
-                            } else {
-                                selectedExercises.append(exercise)
-                            }
-                        }
-                        .foregroundColor(.white) // Set unselected exercise text to white
+                    TextField("", text: $routineName)
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(theme.backgroundColor)
+                        .cornerRadius(5)
                         .overlay(
                             RoundedRectangle(cornerRadius: 5)
-                                .stroke(theme.primaryColor, lineWidth: 1) // Thin orange outline for unselected exercises
+                                .stroke(theme.primaryColor, lineWidth: 1)
                         )
-                        .listRowBackground(theme.backgroundColor) // Set each row's background to match the theme
-                    }
-                    .listStyle(InsetGroupedListStyle())
+                        .customPlaceholder(show: routineName.isEmpty, placeholder: "Name")
                 }
-                .padding(.bottom, 10)
+                .padding(.horizontal)
 
-                // Section: Selected Exercises
-                VStack(alignment: .leading) {
-                    Text("Selected Exercises").font(theme.secondaryFont).foregroundColor(theme.primaryColor)
-                        .padding(.leading)
+                // All Exercises Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Choose exercises for your routine")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.bottom, 5)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 2)
+                                .foregroundColor(theme.primaryColor)
+                                .offset(y: 10),
+                            alignment: .bottomLeading
+                        )
+
+                    // List of All Exercises with black background and custom styling
+                    List(exercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
+                        MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
+                            selectedItems.append(.exercise(exercise)) // Append selected exercise to the routine
+
+                            // Flash effect
+                            flashItem = exercise.id
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                flashItem = nil // Reset after 0.3 seconds
+                            }
+                        }
+                        .listRowBackground(Color.clear) // Clear list background to match spacing style
+                    }
+                    .scrollContentBackground(.hidden)
+                    .background(theme.backgroundColor)
+                    .listStyle(InsetListStyle())
+                    .frame(maxWidth: .infinity)
+
+                    // Centered "Create New Exercise" and "Add Header" Buttons
+                    HStack {
+                        Button(action: {
+                            showingNewExerciseView = true
+                        }) {
+                            Text("Create New Exercise")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                        .sheet(isPresented: $showingNewExerciseView) {
+                            NewExerciseView(exercises: $exercises)
+                                .onDisappear {
+                                    UserDefaultsManager.saveExercises(exercises)
+                                    if let lastCreatedExercise = exercises.last {
+                                        selectedItems.append(.exercise(lastCreatedExercise))
+                                    }
+                                }
+                        }
+
+                        Button(action: {
+                            showingHeaderAlert = true // Show alert for header naming
+                        }) {
+                            Text("Add Header")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+
+                // Section: Selected Items (Exercises + Headers)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Your Routine")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.bottom, 5)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 2)
+                                .foregroundColor(theme.primaryColor)
+                                .offset(y: 10),
+                            alignment: .bottomLeading
+                        )
 
                     List {
-                        ForEach(selectedExercises, id: \.self) { exercise in
-                            Text(exercise.name)
-                                .font(theme.secondaryFont)
-                                .foregroundColor(.white)
-                                .padding()
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(theme.primaryColor, lineWidth: 1)
-                                )
-                                .listRowBackground(theme.backgroundColor)
+                        ForEach(Array(selectedItems.enumerated()), id: \.element.id) { index, item in
+                            switch item {
+                            case .exercise(let exercise):
+                                HStack {
+                                    Text(exercise.name)
+                                        .foregroundColor(.white)
+                                        .padding(.leading, 10)
+
+                                    Spacer()
+                                }
+                                .padding(.vertical, 12)
+                                .background(theme.primaryColor)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .listRowInsets(EdgeInsets())
+
+                            case .header(let name):
+                                HStack {
+                                    Text(name)
+                                        .foregroundColor(.orange)
+                                        .padding(.leading, 10)
+                                    Spacer()
+                                    Button(action: {
+                                        editingHeaderIndex = index
+                                        headerName = name
+                                        showingHeaderAlert = true
+                                    }) {
+                                        Image(systemName: "pencil")
+                                            .foregroundColor(.orange)
+                                    }
+                                    .padding(.trailing, 10)
+                                }
+                                .padding(.vertical, 12)
+                                .background(Color.black)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .listRowInsets(EdgeInsets())
+                            }
                         }
-                        .onMove(perform: moveExercise)
+                        .onDelete(perform: deleteItem)
+                        .onMove(perform: moveItem)
+                        .listRowBackground(Color.clear)
                     }
-                    .listStyle(InsetGroupedListStyle())
-                    .toolbar { EditButton() }
+                    .scrollContentBackground(.hidden)
+                    .background(theme.backgroundColor)
+                    .listStyle(InsetListStyle())
+                    .toolbar {
+                        EditButton() // Rearrange exercises and headers
+                    }
                 }
 
-                // Save Changes Button
-                Button(action: saveChanges) {
-                    Text("Save Changes")
-                        .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
+                Button(action: saveRoutine) {
+                    Text("Save Routine")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(hasValidInput ? theme.buttonTextColor : theme.secondaryColor)
+                        .padding(theme.buttonPadding)
+                        .background(theme.buttonBackgroundColor)
+                        .cornerRadius(theme.buttonCornerRadius)
                 }
-                .font(theme.secondaryFont)
-                .padding(theme.buttonPadding)
-                .background(theme.buttonBackgroundColor)
-                .cornerRadius(theme.buttonCornerRadius)
-                .disabled(!hasValidInput) // Disable button if no valid input
+                .frame(maxWidth: .infinity, alignment: .center)
+                .disabled(!hasValidInput)
                 .alert(isPresented: $showAlert) {
-                    Alert(title: Text("Changes Saved"), message: nil, dismissButton: .default(Text("OK")) {
-                        dismiss() // Dismiss the current view and go back to RoutineListView
+                    Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")) {
+                        dismiss()
                     })
                 }
+                .padding(.top, 10)
+                .padding(.horizontal)
             }
+            .padding(.top)
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) { // Replace the navigation title with our custom view
-                UnderlinedTitle(title: "Edit Routine") // Customize the title text here
+            ToolbarItem(placement: .principal) {
+                UnderlinedTitle(title: "Edit Routine")
             }
         }
         .onAppear {
-            newName = routine.name
-            selectedExercises = routine.exercises // Assign selected exercises from routine
-            loadExerciseTypes()
+            exercises = UserDefaultsManager.loadExercises()
         }
+        .alert("Name your header", isPresented: $showingHeaderAlert, actions: {
+            TextField("Header", text: $headerName)
+            Button("OK", action: {
+                if let index = editingHeaderIndex {
+                    selectedItems[index] = .header(headerName)
+                } else {
+                    selectedItems.append(.header(headerName))
+                }
+                editingHeaderIndex = nil
+            })
+            Button("Cancel", role: .cancel, action: {
+                editingHeaderIndex = nil
+            })
+        })
     }
 
-    // Load existing exercise types from saved workouts and routines
-    func loadExerciseTypes() {
-        exerciseTypes = Array(Set(exercises)).sorted { $0.name < $1.name }
+    func moveItem(from source: IndexSet, to destination: Int) {
+        selectedItems.move(fromOffsets: source, toOffset: destination)
     }
 
-    // Reorder exercises in selected list
-    func moveExercise(from source: IndexSet, to destination: Int) {
-        selectedExercises.move(fromOffsets: source, toOffset: destination)
+    func deleteItem(at offsets: IndexSet) {
+        selectedItems.remove(atOffsets: offsets)
     }
 
-    // Save the updated routine
-    func saveChanges() {
-        guard !newName.isEmpty else { return }
+    func saveRoutine() {
+        guard !routineName.isEmpty else { return }
 
-        if let index = routines.firstIndex(of: routine) {
-            routines[index].name = newName
-            routines[index].exercises = selectedExercises
-            saveRoutines()
+        let exercisesOnly = selectedItems.compactMap { item -> Exercise? in
+            if case .exercise(let exercise) = item {
+                return exercise
+            }
+            return nil
+        }
+
+        if let index = routines.firstIndex(where: { $0.id == routine.id }) {
+            routines[index].name = routineName
+            routines[index].exercises = exercisesOnly
+            UserDefaultsManager.saveRoutines(routines)
             showAlert = true
-        }
-    }
-
-    func saveRoutines() {
-        if let encoded = try? JSONEncoder().encode(routines) {
-            UserDefaults.standard.set(encoded, forKey: "routines")
         }
     }
 }
 
 struct EditRoutineView_Previews: PreviewProvider {
     static var previews: some View {
-        EditRoutineView(routine: Routine(name: "Sample Routine", exercises: [Exercise(name: "Bench Press", selectedMetrics: [.weight])]), routines: .constant([]))
-            .environment(\.theme, AppTheme()) // Preview with the theme applied
+        EditRoutineView(routine: Routine(name: "Sample Routine", exercises: []), routines: .constant([]))
+            .environment(\.theme, AppTheme())
     }
 }
