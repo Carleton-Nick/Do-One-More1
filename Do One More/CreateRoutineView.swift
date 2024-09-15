@@ -1,18 +1,5 @@
+import Foundation
 import SwiftUI
-
-enum RoutineItem: Identifiable {
-    case exercise(Exercise)
-    case header(String)
-
-    var id: UUID {
-        switch self {
-        case .exercise(let exercise):
-            return exercise.id
-        case .header:
-            return UUID()
-        }
-    }
-}
 
 struct CreateRoutineView: View {
     @Binding var routines: [Routine]
@@ -24,7 +11,9 @@ struct CreateRoutineView: View {
     @State private var headerName = ""
     @State private var editingHeaderIndex: Int?
     @State var exercises: [Exercise] = UserDefaultsManager.loadExercises()
-    @State private var flashItem: UUID? = nil // To store the ID of the item to flash
+    @State private var flashItem: UUID? = nil
+    @State private var editMode: EditMode = .inactive // Manage edit mode
+
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
 
@@ -67,30 +56,30 @@ struct CreateRoutineView: View {
                         .overlay(
                             Rectangle()
                                 .frame(height: 2)
-                                .foregroundColor(theme.primaryColor) // Thin orange underline
+                                .foregroundColor(theme.primaryColor)
                                 .offset(y: 10),
                             alignment: .bottomLeading
                         )
 
-                    // List of All Exercises with black background and custom styling
+                    // List of All Exercises
                     List(exercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
                         MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
-                            selectedItems.append(.exercise(exercise)) // Append the selected exercise to the routine
+                            selectedItems.append(.exercise(exercise))
 
-                            // Set the flash state to this exercise, and clear after delay
+                            // Set flash state to this exercise, and clear after delay
                             flashItem = exercise.id
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                flashItem = nil // Reset flash after 0.3 seconds
+                                flashItem = nil
                             }
                         }
-                        .listRowBackground(Color.clear) // Clear list background to match spacing style
+                        .listRowBackground(Color.clear)
                     }
-                    .scrollContentBackground(.hidden) // Remove default white list background
-                    .background(theme.backgroundColor) // Set overall background to black
-                    .listStyle(InsetListStyle()) // Default inset list style (unstyled)
+                    .scrollContentBackground(.hidden)
+                    .background(theme.backgroundColor)
+                    .listStyle(InsetListStyle())
                     .frame(maxWidth: .infinity)
 
-                    // Centered "Create New Exercise" and "Add Header" Button
+                    // Centered Buttons
                     HStack {
                         Button(action: {
                             showingNewExerciseView = true
@@ -107,13 +96,13 @@ struct CreateRoutineView: View {
                                 .onDisappear {
                                     UserDefaultsManager.saveExercises(exercises)
                                     if let lastCreatedExercise = exercises.last {
-                                        selectedItems.append(.exercise(lastCreatedExercise)) // Append newly created exercise to routine
+                                        selectedItems.append(.exercise(lastCreatedExercise))
                                     }
                                 }
                         }
 
                         Button(action: {
-                            showingHeaderAlert = true // Show the alert for header naming
+                            showingHeaderAlert = true
                         }) {
                             Text("Add Header")
                                 .font(theme.secondaryFont)
@@ -123,20 +112,20 @@ struct CreateRoutineView: View {
                                 .cornerRadius(theme.buttonCornerRadius)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .center) // Center the buttons
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
 
-                // Section: Selected Items (Exercises + Headers)
+                // Section: Selected Items
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Your Routine")
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center) // Center the text
+                        .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.bottom, 5)
                         .overlay(
                             Rectangle()
                                 .frame(height: 2)
-                                .foregroundColor(theme.primaryColor) // Thin orange underline
+                                .foregroundColor(theme.primaryColor)
                                 .offset(y: 10),
                             alignment: .bottomLeading
                         )
@@ -147,21 +136,21 @@ struct CreateRoutineView: View {
                             case .exercise(let exercise):
                                 HStack {
                                     Text(exercise.name)
-                                        .foregroundColor(.white) // White text when selected
-                                        .padding(.leading, 10) // Add leading padding to match "All Exercises"
+                                        .foregroundColor(.white)
+                                        .padding(.leading, 10)
 
                                     Spacer()
                                 }
-                                .padding(.vertical, 12) // Add consistent vertical padding
-                                .background(theme.primaryColor) // Orange background for selected exercises
-                                .frame(maxWidth: .infinity, alignment: .leading) // Ensure it spans the entire width and aligns left
-                                .listRowInsets(EdgeInsets()) // Remove extra insets
+                                .padding(.vertical, 12)
+                                .background(theme.primaryColor)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .listRowInsets(EdgeInsets())
 
                             case .header(let name):
                                 HStack {
                                     Text(name)
-                                        .foregroundColor(.orange) // Orange text for headers
-                                        .padding(.leading, 10) // Add leading padding to match "All Exercises"
+                                        .foregroundColor(.orange)
+                                        .padding(.leading, 10)
                                     Spacer()
                                     Button(action: {
                                         editingHeaderIndex = index
@@ -171,24 +160,22 @@ struct CreateRoutineView: View {
                                         Image(systemName: "pencil")
                                             .foregroundColor(.orange)
                                     }
-                                    .padding(.trailing, 10) // Add trailing padding for the edit button
+                                    .padding(.trailing, 10)
                                 }
                                 .padding(.vertical, 12)
-                                .background(Color.black) // Black background for headers
+                                .background(Color.black)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .listRowInsets(EdgeInsets()) // Remove extra insets
+                                .listRowInsets(EdgeInsets())
                             }
                         }
                         .onDelete(perform: deleteItem)
                         .onMove(perform: moveItem)
-                        .listRowBackground(Color.clear) // Set the list row background to clear to remove extra styling
+                        .listRowBackground(Color.clear)
                     }
-                    .scrollContentBackground(.hidden) // Remove default white list background
-                    .background(theme.backgroundColor) // Set overall background color to theme
+                    .scrollContentBackground(.hidden)
+                    .background(theme.backgroundColor)
                     .listStyle(InsetListStyle())
-                    .toolbar {
-                        EditButton() // To rearrange the selected exercises and headers
-                    }
+                    .environment(\.editMode, $editMode) // Apply edit mode to the list
                 }
 
                 Button(action: saveRoutine) {
@@ -247,6 +234,7 @@ struct CreateRoutineView: View {
     func saveRoutine() {
         guard !routineName.isEmpty else { return }
 
+        // Extract exercises from the selectedItems array
         let exercisesOnly = selectedItems.compactMap { item -> Exercise? in
             if case .exercise(let exercise) = item {
                 return exercise
@@ -254,7 +242,8 @@ struct CreateRoutineView: View {
             return nil
         }
 
-        let newRoutine = Routine(name: routineName, exercises: exercisesOnly)
+        // Create a new Routine with both exercises and items
+        let newRoutine = Routine(name: routineName, exercises: exercisesOnly, items: selectedItems)
         routines.append(newRoutine)
         UserDefaultsManager.saveRoutines(routines)
         showAlert = true

@@ -11,32 +11,34 @@ struct EditRoutineView: View {
     @State private var headerName = ""
     @State private var editingHeaderIndex: Int?
     @State var exercises: [Exercise] = UserDefaultsManager.loadExercises()
-    @State private var flashItem: UUID? = nil // To store the ID of the item to flash
+    @State private var flashItem: UUID? = nil
+    @State private var editMode: EditMode = .inactive // Add EditMode state
+
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
-
+    
     init(routine: Routine, routines: Binding<[Routine]>) {
         self.routine = routine
         self._routines = routines
         self._routineName = State(initialValue: routine.name)
-        self._selectedItems = State(initialValue: routine.exercises.map { .exercise($0) })
+        self._selectedItems = State(initialValue: routine.items) // Load both exercises and headers
     }
-
+    
     var hasValidInput: Bool {
         !routineName.isEmpty
     }
-
+    
     var body: some View {
         ZStack {
             theme.backgroundColor.edgesIgnoringSafeArea(.all)
-
+            
             VStack(alignment: .leading) {
                 // Section: Routine Name
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Routine Name")
                         .font(theme.secondaryFont)
                         .foregroundColor(theme.primaryColor)
-
+                    
                     TextField("", text: $routineName)
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
@@ -50,7 +52,7 @@ struct EditRoutineView: View {
                         .customPlaceholder(show: routineName.isEmpty, placeholder: "Name")
                 }
                 .padding(.horizontal)
-
+                
                 // All Exercises Section
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Choose exercises for your routine")
@@ -65,25 +67,25 @@ struct EditRoutineView: View {
                                 .offset(y: 10),
                             alignment: .bottomLeading
                         )
-
+                    
                     // List of All Exercises with black background and custom styling
                     List(exercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
                         MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
-                            selectedItems.append(.exercise(exercise)) // Append selected exercise to the routine
-
+                            selectedItems.append(.exercise(exercise))
+                            
                             // Flash effect
                             flashItem = exercise.id
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                flashItem = nil // Reset after 0.3 seconds
+                                flashItem = nil
                             }
                         }
-                        .listRowBackground(Color.clear) // Clear list background to match spacing style
+                        .listRowBackground(Color.clear)
                     }
                     .scrollContentBackground(.hidden)
                     .background(theme.backgroundColor)
                     .listStyle(InsetListStyle())
                     .frame(maxWidth: .infinity)
-
+                    
                     // Centered "Create New Exercise" and "Add Header" Buttons
                     HStack {
                         Button(action: {
@@ -105,9 +107,9 @@ struct EditRoutineView: View {
                                     }
                                 }
                         }
-
+                        
                         Button(action: {
-                            showingHeaderAlert = true // Show alert for header naming
+                            showingHeaderAlert = true
                         }) {
                             Text("Add Header")
                                 .font(theme.secondaryFont)
@@ -119,7 +121,7 @@ struct EditRoutineView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
-
+                
                 // Section: Selected Items (Exercises + Headers)
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Your Routine")
@@ -134,7 +136,7 @@ struct EditRoutineView: View {
                                 .offset(y: 10),
                             alignment: .bottomLeading
                         )
-
+                    
                     List {
                         ForEach(Array(selectedItems.enumerated()), id: \.element.id) { index, item in
                             switch item {
@@ -143,14 +145,14 @@ struct EditRoutineView: View {
                                     Text(exercise.name)
                                         .foregroundColor(.white)
                                         .padding(.leading, 10)
-
+                                    
                                     Spacer()
                                 }
                                 .padding(.vertical, 12)
                                 .background(theme.primaryColor)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .listRowInsets(EdgeInsets())
-
+                                
                             case .header(let name):
                                 HStack {
                                     Text(name)
@@ -180,11 +182,9 @@ struct EditRoutineView: View {
                     .scrollContentBackground(.hidden)
                     .background(theme.backgroundColor)
                     .listStyle(InsetListStyle())
-                    .toolbar {
-                        EditButton() // Rearrange exercises and headers
-                    }
+                    .environment(\.editMode, $editMode) // Apply edit mode to the list
                 }
-
+                
                 Button(action: saveRoutine) {
                     Text("Save Routine")
                         .font(theme.secondaryFont)
@@ -229,28 +229,29 @@ struct EditRoutineView: View {
             })
         })
     }
-
+    
     func moveItem(from source: IndexSet, to destination: Int) {
         selectedItems.move(fromOffsets: source, toOffset: destination)
     }
-
+    
     func deleteItem(at offsets: IndexSet) {
         selectedItems.remove(atOffsets: offsets)
     }
-
+    
     func saveRoutine() {
         guard !routineName.isEmpty else { return }
-
+        
         let exercisesOnly = selectedItems.compactMap { item -> Exercise? in
             if case .exercise(let exercise) = item {
                 return exercise
             }
             return nil
         }
-
+        
+        let newRoutine = Routine(name: routineName, exercises: exercisesOnly, items: selectedItems)
+        
         if let index = routines.firstIndex(where: { $0.id == routine.id }) {
-            routines[index].name = routineName
-            routines[index].exercises = exercisesOnly
+            routines[index] = newRoutine
             UserDefaultsManager.saveRoutines(routines)
             showAlert = true
         }
@@ -259,7 +260,14 @@ struct EditRoutineView: View {
 
 struct EditRoutineView_Previews: PreviewProvider {
     static var previews: some View {
-        EditRoutineView(routine: Routine(name: "Sample Routine", exercises: []), routines: .constant([]))
-            .environment(\.theme, AppTheme())
+        EditRoutineView(
+            routine: Routine(
+                name: "Sample Routine",
+                exercises: [Exercise(name: "Bench Press", selectedMetrics: [])],
+                items: [.header("Warm-up"), .exercise(Exercise(name: "Bench Press", selectedMetrics: []))]
+            ),
+            routines: .constant([])
+        )
+        .environment(\.theme, AppTheme())
     }
 }
