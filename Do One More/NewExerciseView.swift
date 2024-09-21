@@ -5,71 +5,99 @@ struct NewExerciseView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var exerciseName: String = ""
     @State private var selectedMetrics: Set<ExerciseMetric> = []
-    @State private var showAlert = false // Show alert if no exercise name or metrics are selected
+    @State private var showAlert = false
+    @Environment(\.theme) var theme
 
     var canSave: Bool {
-        // Enable the Save button only when exerciseName is not empty and at least one metric is selected
         return !exerciseName.isEmpty && !selectedMetrics.isEmpty
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("Create New Exercise")
-                .font(.title)
-                .padding(.bottom, 20)
+        ZStack {
+            theme.backgroundColor.edgesIgnoringSafeArea(.all)
 
-            TextField("Exercise Name", text: $exerciseName)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.bottom, 20)
-
-            Text("Select Metrics")
-                .font(.headline)
-
-            ForEach(ExerciseMetric.allCases, id: \.self) { metric in
+            VStack(alignment: .leading) {
+                // Drag Handle
                 HStack {
-                    Text(metric.rawValue)
-                    Spacer()
-                    Toggle(isOn: Binding<Bool>(
-                        get: { selectedMetrics.contains(metric) },
-                        set: { isSelected in
-                            if isSelected {
-                                selectedMetrics.insert(metric)
-                            } else {
-                                selectedMetrics.remove(metric)
-                            }
-                        }
-                    )) {
-                        EmptyView()
-                    }
-                    .labelsHidden()
+                    Capsule()
+                        .fill(Color.gray.opacity(0.7)) // Grey color with some opacity
+                        .frame(width: 120, height: 5) // Handle size
+                        .padding(.top, 10) // Add padding to separate it from the top
+                        .padding(.bottom, 10) // Add padding below drag handle so it's not directly against the input field
                 }
-                .padding(.vertical, 5)
-            }
+                .frame(maxWidth: .infinity) // Center the drag handle horizontally
 
-            Spacer()
-
-            Button(action: saveExercise) {
-                Text("Save Exercise")
-                    .padding()
-                    .background(canSave ? Color.blue : Color.gray) // Button background color based on criteria
+                // Input Field for Exercise Name with Placeholder
+                TextField("", text: $exerciseName)
+                    .font(theme.secondaryFont)
                     .foregroundColor(.white)
+                    .padding()
+                    .background(theme.backgroundColor)
                     .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.primaryColor, lineWidth: 1)
+                    )
+                    .customPlaceholder(show: exerciseName.isEmpty, placeholder: "New Exercise Name")
+                    .padding(.bottom, 20)
+
+                Text("Select Metrics")
+                    .font(theme.secondaryFont)
+                    .foregroundColor(theme.primaryColor)
+
+                ForEach(ExerciseMetric.allCases, id: \.self) { metric in
+                    HStack {
+                        Text(metric.rawValue)
+                            .font(theme.secondaryFont)
+                            .foregroundColor(.white)
+                        Spacer()
+                        Toggle(isOn: Binding<Bool>(
+                            get: { selectedMetrics.contains(metric) },
+                            set: { isSelected in
+                                if isSelected {
+                                    selectedMetrics.insert(metric)
+                                } else {
+                                    selectedMetrics.remove(metric)
+                                }
+                            }
+                        )) {
+                            EmptyView()
+                        }
+                        .tint(theme.primaryColor)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(theme.primaryColor, lineWidth: 1)
+                        )
+                        .labelsHidden()
+                    }
+                    .padding(.vertical, 5)
+                }
+
+                Spacer()
+
+                Button(action: saveExercise) {
+                    Text("Save Exercise")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(theme.buttonTextColor)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(canSave ? theme.buttonBackgroundColor : Color.gray)
+                        .cornerRadius(theme.buttonCornerRadius)
+                }
+                .disabled(!canSave)
+                .alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text("Incomplete Exercise"),
+                        message: Text("Please provide a name and select at least one metric."),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
             }
-            .disabled(!canSave) // Disable the button if criteria are not met
-            .alert(isPresented: $showAlert) {
-                Alert(
-                    title: Text("Incomplete Exercise"),
-                    message: Text("Please provide a name and select at least one metric."),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
+            .padding()
         }
-        .padding()
     }
 
-    // Save the new exercise and dismiss
     func saveExercise() {
-        // Validate: Require a name and at least one metric
         guard !exerciseName.isEmpty && !selectedMetrics.isEmpty else {
             showAlert = true
             return
@@ -77,11 +105,7 @@ struct NewExerciseView: View {
 
         let newExercise = Exercise(name: exerciseName, selectedMetrics: Array(selectedMetrics))
         exercises.append(newExercise)
-
-        // Save the updated exercises to UserDefaults
         UserDefaultsManager.saveExercises(exercises)
-
-        // Dismiss the current view
         presentationMode.wrappedValue.dismiss()
     }
 }
@@ -89,5 +113,6 @@ struct NewExerciseView: View {
 struct NewExerciseView_Previews: PreviewProvider {
     static var previews: some View {
         NewExerciseView(exercises: .constant([]))
+            .environment(\.theme, AppTheme())
     }
 }

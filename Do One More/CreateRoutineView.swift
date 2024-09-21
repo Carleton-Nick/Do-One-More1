@@ -28,11 +28,8 @@ struct CreateRoutineView: View {
             VStack(alignment: .leading) {
                 // Section: Routine Name
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Routine Name")
-                        .font(theme.secondaryFont)
-                        .foregroundColor(theme.primaryColor)
 
-                    TextField("", text: $routineName)
+                        TextField("", text: $routineName)
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
                         .padding()
@@ -42,7 +39,7 @@ struct CreateRoutineView: View {
                             RoundedRectangle(cornerRadius: 5)
                                 .stroke(theme.primaryColor, lineWidth: 1)
                         )
-                        .customPlaceholder(show: routineName.isEmpty, placeholder: "Name")
+                        .customPlaceholder(show: routineName.isEmpty, placeholder: "Routine Name")
                 }
                 .padding(.horizontal)
 
