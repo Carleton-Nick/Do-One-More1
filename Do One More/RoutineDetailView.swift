@@ -16,33 +16,48 @@ struct RoutineDetailView: View {
                     .padding(.bottom, 20)
 
                 List {
-                    ForEach(routine.items, id: \.id) { item in
+                    ForEach(routine.items) { item in
                         switch item {
                         case .exercise(let exercise):
+                            // Exercise rows with consistent padding
                             NavigationLink(
                                 destination: ContentView(selectedExerciseType: exercise.name, fromRoutine: true)
                             ) {
-                                Text(exercise.name)
+                                HStack {
+                                    Text(exercise.name)
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 10)
+                                        .padding(.horizontal, 10)
+                                        .frame(maxWidth: .infinity, alignment: .center) // Align text to center
+                                        .background(.orange)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(.black, lineWidth: 2)
+                                        )
+                                }
+                            }
+                            .listRowBackground(Color.clear)
+
+                        case .header(let name):
+                            // Header rows styled similarly to exercise rows
+                            HStack {
+                                Text("- \(name) -")
                                     .font(theme.secondaryFont)
-                                    .foregroundColor(theme.primaryColor)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(8)
-                                    .background(theme.backgroundColor)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 10)
+                                    .padding(.horizontal, 10)
+                                    .frame(maxWidth: .infinity, alignment: .center) // Align text to center
+                                    .background(.gray)
                                     .cornerRadius(8)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
-                                            .stroke(theme.primaryColor, lineWidth: 1)
+                                            .stroke(.white, lineWidth: 2)
                                     )
                             }
-                        case .header(let name):
-                            HStack {
-                                Text(name)
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.orange)  // Use orange for headers
-                                    .padding(.vertical, 8)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.black)
-                            }
+                            .listRowBackground(Color.clear)
+                            .padding(.trailing, 12) // Ensure padding consistency with exercises
                         }
                     }
                 }
@@ -67,7 +82,7 @@ struct RoutineDetailView_Previews: PreviewProvider {
         RoutineDetailView(
             routine: Routine(
                 name: "Sample Routine",
-                exercises: [Exercise(name: "Bench Press", selectedMetrics: [])], // Provide an array of exercises here
+                exercises: [Exercise(name: "Bench Press", selectedMetrics: [])],
                 items: [
                     .header("Warm-up"),
                     .exercise(Exercise(name: "Bench Press", selectedMetrics: []))
@@ -75,6 +90,6 @@ struct RoutineDetailView_Previews: PreviewProvider {
             ),
             routines: .constant([])
         )
-        .environment(\.theme, AppTheme()) // Preview with the theme applied
+        .environment(\.theme, AppTheme())
     }
 }

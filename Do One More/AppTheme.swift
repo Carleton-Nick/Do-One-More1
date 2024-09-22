@@ -23,7 +23,7 @@ struct AppTheme: EnvironmentKey {
 
     // Button Styles
     let buttonCornerRadius: CGFloat = 8
-    let buttonPadding: CGFloat = 7
+    let buttonPadding: CGFloat = 7 // affects the padding around main buttons, but not items that have the roundedRectangle design. 
 }
 
 extension EnvironmentValues {

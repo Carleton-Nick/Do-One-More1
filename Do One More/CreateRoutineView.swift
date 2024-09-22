@@ -145,22 +145,26 @@ struct CreateRoutineView: View {
 
                             case .header(let name):
                                 HStack {
-                                    Text(name)
-                                        .foregroundColor(.orange)
-                                        .padding(.leading, 10)
-                                    Spacer()
+                                    Spacer() // Add a spacer before the text to help center it
+                                    // Add dashes to either side of the header name
+                                        Text("- \(name) -")
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10) // Adjust the padding to be horizontal for better balance
+                                    Spacer() // Add another spacer after the text to keep it centered
+
+                                    // Hidden pencil button, but still functional
                                     Button(action: {
                                         editingHeaderIndex = index
                                         headerName = name
                                         showingHeaderAlert = true
                                     }) {
                                         Image(systemName: "pencil")
-                                            .foregroundColor(.orange)
+                                            .foregroundColor(.gray) // Make the pencil invisible with black color
                                     }
-                                    .padding(.trailing, 10)
+                                    .padding(.trailing, 10) // Keep the trailing padding for consistent spacing
                                 }
                                 .padding(.vertical, 12)
-                                .background(Color.black)
+                                .background(Color.gray)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .listRowInsets(EdgeInsets())
                             }

@@ -44,7 +44,7 @@ struct RoutineListView: View {
 
                     // "Add Routine" button with consistent styling
                     NavigationLink(destination: CreateRoutineView(routines: $routines)) {
-                        Text("Add Routine")
+                        Text("Create Routine")
                             .font(theme.secondaryFont)
                             .foregroundColor(theme.buttonTextColor)
                             .padding(theme.buttonPadding)

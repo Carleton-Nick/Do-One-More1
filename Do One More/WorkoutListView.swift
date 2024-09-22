@@ -6,96 +6,116 @@ struct WorkoutListView: View {
     @Environment(\.theme) var theme // Inject the global theme
 
     var body: some View {
-        ZStack(alignment: .bottom) {  // Align contents to the bottom
+        ZStack(alignment: .bottomTrailing) {
             theme.backgroundColor.edgesIgnoringSafeArea(.all) // Set the entire view's background
 
-            List(workouts, id: \.exerciseType) { workout in
-                VStack(alignment: .leading, spacing: 10) {
-                    // Display the exercise type with a light orange border
-                    Text(workout.exerciseType)
+            VStack(spacing: 0) {
+                // Saved Workouts Title with underline
+                VStack(spacing: 0) {
+                    Text("Saved Workouts")
                         .font(theme.primaryFont)
-                        .foregroundColor(.orange)
-                        .padding(.vertical, 5)
-                        .padding(.horizontal)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.orange, lineWidth: 2) // Light orange border
-                        )
-                    // Display the date and time of the workout (on the same line as the exercise name)
-                    Text("Date: \(formatTimestamp(workout.timestamp))")
-                        .font(theme.secondaryFont)
                         .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .textCase(.uppercase) // Make text uppercase
 
-                    // Display each set in the workout
-                    ForEach(Array(workout.sets.enumerated()), id: \.offset) { index, set in
-                        VStack(alignment: .leading, spacing: 5) {
-                            // Set number with light orange underline
-                            Text("Set \(index + 1)")
-                                .font(theme.primaryFont)
-                                .foregroundColor(.white)
-                                .padding(.bottom, 2)
-                                .overlay(
-                                    Rectangle()
-                                        .frame(height: 1)
-                                        .foregroundColor(.orange) // Light orange underline
-                                        .offset(y: 2),
-                                    alignment: .bottom
-                                )
-
-                            // Weight and Reps
-                            if let weight = set.weight {
-                                Text("Weight: \(weight) lbs")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                            }
-
-                            if let reps = set.reps {
-                                Text("Reps: \(reps)")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                            }
-
-                            // Time and Distance
-                            if let elapsedTime = set.elapsedTime, !elapsedTime.isEmpty {
-                                Text("Time: \(elapsedTime)")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                            }
-
-                            if let distance = set.distance {
-                                Text("Distance: \(distance) miles")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                            }
-
-                            // Calories
-                            if let calories = set.calories, !calories.isEmpty {
-                                Text("Calories: \(calories)")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                            }
-
-                            // Custom Notes
-                            if let custom = set.custom, !custom.isEmpty {
-                                Text("Notes: \(custom)")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        .padding(.vertical, 5) // Space between each set
-                        .background(Color.black.opacity(0.2)) // Light background for each set
-                        .cornerRadius(8)
-                    }
+                    // Orange underline spanning the width of the screen
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundColor(.orange)
+                        .frame(maxWidth: .infinity)
                 }
-                .padding(8)
-                .background(theme.backgroundColor) // Match the background to the app’s theme
-                .cornerRadius(8)
-                .listRowBackground(theme.backgroundColor) // Set the row background color to match the theme
-            }
-            .scrollContentBackground(.hidden) // Hide the default list background
-            .listStyle(PlainListStyle()) // Simplify the list style to avoid additional padding
+                .padding(.top, 8)  // Add slight padding below the top
 
-            // CSV Export Button at the bottom-center
+                // List of workouts
+                List(workouts, id: \.exerciseType) { workout in
+                    VStack(alignment: .leading, spacing: 10) {
+                        // Display the exercise type with a light orange border
+                        Text(workout.exerciseType)
+                            .font(theme.primaryFont)
+                            .foregroundColor(.orange)
+                            .padding(.vertical, 5)
+                            .padding(.horizontal)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.orange, lineWidth: 2) // Light orange border
+                            )
+                        
+                        // Display the date and time of the workout
+                        Text("Date: \(formatTimestamp(workout.timestamp))")
+                            .font(theme.secondaryFont)
+                            .foregroundColor(.white)
+
+                        // Display each set in the workout
+                        ForEach(Array(workout.sets.enumerated()), id: \.offset) { index, set in
+                            VStack(alignment: .leading, spacing: 5) {
+                                // Set number with light orange underline
+                                Text("Set \(index + 1)")
+                                    .font(theme.primaryFont)
+                                    .foregroundColor(.white)
+                                    .padding(.bottom, 2)
+                                    .overlay(
+                                        Rectangle()
+                                            .frame(height: 1)
+                                            .foregroundColor(.orange) // Light orange underline
+                                            .offset(y: 2),
+                                        alignment: .bottom
+                                    )
+
+                                // Weight and Reps
+                                if let weight = set.weight {
+                                    Text("Weight: \(weight) lbs")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                }
+
+                                if let reps = set.reps {
+                                    Text("Reps: \(reps)")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                }
+
+                                // Time and Distance
+                                if let elapsedTime = set.elapsedTime, !elapsedTime.isEmpty {
+                                    Text("Time: \(elapsedTime)")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                }
+
+                                if let distance = set.distance {
+                                    Text("Distance: \(distance) miles")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                }
+
+                                // Calories
+                                if let calories = set.calories, !calories.isEmpty {
+                                    Text("Calories: \(calories)")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                }
+
+                                // Custom Notes
+                                if let custom = set.custom, !custom.isEmpty {
+                                    Text("Notes: \(custom)")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .padding(.vertical, 5) // Space between each set
+                            .background(Color.black.opacity(0.2)) // Light background for each set
+                            .cornerRadius(8)
+                        }
+                    }
+                    .padding(8)
+                    .background(theme.backgroundColor) // Match the background to the app’s theme
+                    .cornerRadius(8)
+                    .listRowBackground(theme.backgroundColor) // Set the row background color to match the theme
+                }
+                .scrollContentBackground(.hidden) // Hide the default list background
+                .listStyle(PlainListStyle()) // Simplify the list style to avoid additional padding
+            }
+
+            // Export CSV Button at the bottom-right corner
             Button(action: {
                 shareCSV(workouts: workouts) // Trigger CSV share
             }) {
@@ -106,13 +126,7 @@ struct WorkoutListView: View {
                     .background(theme.buttonBackgroundColor)
                     .cornerRadius(theme.buttonCornerRadius)
             }
-            .padding(.bottom, 20)  // Padding from the bottom
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) { // Replace the navigation title with our custom view
-                UnderlinedTitle(title: "Saved Workouts") // Customize the title text here
-            }
+            .padding([.bottom, .trailing], 20) // Padding from the bottom-right corner
         }
         .onAppear(perform: loadWorkouts)
     }
@@ -137,7 +151,6 @@ struct WorkoutListView: View {
         
         for workout in workouts {
             for (index, set) in workout.sets.enumerated() {
-                // Break down the components of the row into individual variables
                 let exerciseType = workout.exerciseType
                 let formattedDate = formatTimestamp(workout.timestamp)
                 let setIndex = "Set \(index + 1)"
@@ -147,8 +160,7 @@ struct WorkoutListView: View {
                 let distance = set.distance ?? ""
                 let calories = set.calories ?? ""
                 let custom = set.custom ?? ""
-                
-                // Combine the components into a single CSV row
+
                 let row = [
                     exerciseType,
                     formattedDate,
@@ -160,7 +172,7 @@ struct WorkoutListView: View {
                     calories,
                     custom
                 ].joined(separator: ",")
-                
+
                 csvString.append("\(row)\n")
             }
         }
@@ -173,17 +185,13 @@ struct WorkoutListView: View {
         let csvString = generateCSV(from: workouts)
         let fileName = "Workouts.csv"
         
-        // Create a temporary file with the CSV content
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         
         do {
-            // Write the CSV data to the file
             try csvString.write(to: tempURL, atomically: true, encoding: .utf8)
             
-            // Present the UIActivityViewController to share the file
             let activityViewController = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
             
-            // Get the active window's root view controller for presenting the share sheet
             if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                let window = scene.windows.first,
                let rootViewController = window.rootViewController {

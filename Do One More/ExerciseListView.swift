@@ -96,7 +96,7 @@ struct ExerciseListView: View {
 
             // Sheet for editing an existing exercise
             .sheet(item: $exerciseToEdit) { exercise in
-                EditExerciseView(exercise: exercise, exercises: $exercises)
+                EditExerciseView(exercise: $exercises[exercises.firstIndex(of: exercise)!], exercises: $exercises)
                     .onDisappear {
                         UserDefaultsManager.saveExercises(exercises)
                     }
