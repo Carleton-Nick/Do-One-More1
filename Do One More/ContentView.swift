@@ -30,142 +30,182 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
+            ZStack {
+                theme.backgroundColor.edgesIgnoringSafeArea(.all)
+
                 VStack {
-                    // Exercise Picker
-                    HStack {
-                        Menu {
-                            Picker(selection: $selectedExerciseType) {
-                                ForEach(exercises.sorted(by: { $0.name < $1.name }).map { $0.name }, id: \.self) { exercise in
-                                    Text(exercise)
-                                        .foregroundColor(.primary) // Set color for picker options
+                    ScrollView {
+                        VStack {
+                            // Exercise Picker
+                            HStack {
+                                Menu {
+                                    Picker(selection: $selectedExerciseType) {
+                                        ForEach(exercises.sorted(by: { $0.name < $1.name }).map { $0.name }, id: \.self) { exercise in
+                                            Text(exercise)
+                                                .foregroundColor(.primary) // Set color for picker options
+                                        }
+                                    } label: {
+                                        EmptyView()  // Hide Picker label inside the Menu
+                                    }
+                                } label: {
+                                    Text(selectedExerciseType.isEmpty ? "Choose an exercise" : selectedExerciseType)
+                                        .customPickerStyle()  // Apply the custom style
+                                    Image(systemName: "chevron.up.chevron.down")
+                                        .customPickerStyle()  // Apply the custom style
                                 }
-                            } label: {
-                                EmptyView()  // Hide Picker label inside the Menu
+                                .padding(10)
+                                .onChange(of: selectedExerciseType) { newValue in
+                                    // Update set records when an exercise is selected
+                                    if exercises.contains(where: { $0.name == newValue }) {
+                                        setRecords = [SetRecord()]
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
                             }
-                        } label: {
-                            Text(selectedExerciseType.isEmpty ? "Choose an exercise" : selectedExerciseType)
-                                .customPickerStyle()  // Apply the custom style
-                            Image(systemName: "chevron.up.chevron.down")
-                                .customPickerStyle()  // Apply the custom style
-                        }
-                        .padding(10)
-                        .onChange(of: selectedExerciseType) {
-                            if exercises.contains(where: { $0.name == selectedExerciseType }) {
-                                setRecords = [SetRecord()]
+                            .padding(.horizontal)
+                            .padding(.bottom, 3)
+
+                            // Display set records based on selected exercise
+                            if let currentExercise = exercises.first(where: { $0.name == selectedExerciseType }) {
+                                ForEach(Array(setRecords.enumerated()), id: \.offset) { index, _ in
+                                    VStack {
+                                        // Horizontal Stack for Weight and Reps, if selected
+                                        if currentExercise.selectedMetrics.contains(.weight) || currentExercise.selectedMetrics.contains(.reps) {
+                                            HStack {
+                                                if currentExercise.selectedMetrics.contains(.weight) {
+                                                    createTextField(for: .weight, at: index)
+                                                        .frame(maxWidth: .infinity)
+                                                }
+                                                if currentExercise.selectedMetrics.contains(.reps) {
+                                                    createTextField(for: .reps, at: index)
+                                                        .frame(maxWidth: .infinity)
+                                                }
+                                            }
+                                            .padding(.horizontal)
+                                        }
+                                        
+                                        // Horizontal Stack for Time and Distance, if selected
+                                        if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
+                                            HStack {
+                                                if currentExercise.selectedMetrics.contains(.time) {
+                                                    createTextField(for: .time, at: index)
+                                                        .frame(maxWidth: .infinity)
+                                                }
+                                                if currentExercise.selectedMetrics.contains(.distance) {
+                                                    createTextField(for: .distance, at: index)
+                                                        .frame(maxWidth: .infinity)
+                                                }
+                                            }
+                                            .padding(.horizontal)
+                                        }
+                                        
+                                        // Horizontal Stack for Calories and Custom Notes, if selected
+                                        if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
+                                            HStack {
+                                                if currentExercise.selectedMetrics.contains(.calories) {
+                                                    createTextField(for: .calories, at: index)
+                                                        .frame(maxWidth: .infinity)
+                                                }
+                                                if currentExercise.selectedMetrics.contains(.custom) {
+                                                    createTextField(for: .custom, at: index)
+                                                        .frame(maxWidth: .infinity)
+                                                }
+                                            }
+                                            .padding(.horizontal)
+                                        }
+                                    }
+                                }
                             }
+
+                            // Display the most recent workout data (called after exercise selection)
+                            if let recentWorkout = findMostRecentWorkout() {
+                                VStack(alignment: .leading) {
+                                    Text("Last \(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
+                                        .font(theme.primaryFont)
+                                        .padding(.top, 10)
+                                        .foregroundColor(.orange)
+                                    
+                                    ForEach(recentWorkout.sets, id: \.self) { set in
+                                        HStack {
+                                            if let weight = set.weight {
+                                                Text("Weight: \(weight) lbs")
+                                                    .font(theme.secondaryFont)
+                                                    .foregroundColor(.white)
+                                            }
+                                            if let reps = set.reps {
+                                                Text("Reps: \(reps)")
+                                                    .font(theme.secondaryFont)
+                                                    .foregroundColor(.white)
+                                            }
+                                            if let time = set.elapsedTime {
+                                                Text("Time: \(time)")
+                                                    .font(theme.secondaryFont)
+                                                    .foregroundColor(.white)
+                                            }
+                                            if let distance = set.distance {
+                                                Text("Distance: \(distance) miles")
+                                                    .font(theme.secondaryFont)
+                                                    .foregroundColor(.white)
+                                            }
+                                            if let calories = set.calories {
+                                                Text("Calories: \(calories)")
+                                                    .font(theme.secondaryFont)
+                                                    .foregroundColor(.white)
+                                            }
+                                            if let notes = set.custom {
+                                                Text("Notes: \(notes)")
+                                                    .font(theme.secondaryFont)
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
+                                        .padding(.vertical, 5)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+
+                            HStack {
+                                Button(action: {
+                                    setRecords.append(SetRecord())  // Add a new SetRecord to the list
+                                }) {
+                                    Text("Add Set")
+                                }
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+
+                                Spacer()
+
+                                Button(action: saveWorkout) {
+                                    Text("Save Workout")
+                                        .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
+                                }
+                                .font(theme.secondaryFont)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                                .disabled(!hasValidInput)
+                                .alert(isPresented: $showAlert) {
+                                    Alert(title: Text("Workout Saved!"), dismissButton: .default(Text("OK")) {
+                                        clearInputFields()
+                                    })
+                                }
+                            }
+                            .padding(.top, 5)
+                            .padding(.horizontal)
+
+                            Spacer(minLength: 100) // Create some space between the content and the buttons
                         }
-                        .frame(maxWidth: .infinity)
-                        .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
+                        .padding(.top, 20)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 3)
 
-                    if let currentExercise = exercises.first(where: { $0.name == selectedExerciseType }) {
-                        ForEach(Array(setRecords.enumerated()), id: \.offset) { index, _ in
-                            VStack {
-                                // Horizontal Stack for Weight and Reps, if selected
-                                if currentExercise.selectedMetrics.contains(.weight) || currentExercise.selectedMetrics.contains(.reps) {
-                                    HStack {
-                                        if currentExercise.selectedMetrics.contains(.weight) {
-                                            createTextField(for: .weight, at: index)
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                        if currentExercise.selectedMetrics.contains(.reps) {
-                                            createTextField(for: .reps, at: index)
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
-
-                                // Horizontal Stack for Time and Distance, if selected
-                                if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
-                                    HStack {
-                                        if currentExercise.selectedMetrics.contains(.time) {
-                                            createTextField(for: .time, at: index)
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                        if currentExercise.selectedMetrics.contains(.distance) {
-                                            createTextField(for: .distance, at: index)
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
-
-                                // Horizontal Stack for Calories and Custom Notes, if selected
-                                if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
-                                    HStack {
-                                        if currentExercise.selectedMetrics.contains(.calories) {
-                                            createTextField(for: .calories, at: index)
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                        if currentExercise.selectedMetrics.contains(.custom) {
-                                            createTextField(for: .custom, at: index)
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
-                            }
-                        }
-                    }
-
-                    // Display the most recent workout data
-                    if let recentWorkout = findMostRecentWorkout() {
-                        VStack(alignment: .leading) {
-                            // Display the formatted workout name and date
-                            Text("Last \(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
-                                .font(theme.primaryFont)
-                                .padding(.top, 10)
-                                .foregroundColor(.orange)
-
-                            // Iterate through the sets and display metrics
-                            ForEach(recentWorkout.sets, id: \.self) { set in
-                                HStack {
-                                    if let weight = set.weight {
-                                        Text("Weight: \(weight) lbs")
-                                            .font(theme.secondaryFont)
-                                            .foregroundColor(.white)
-                                    }
-                                    if let reps = set.reps {
-                                        Text("Reps: \(reps)")
-                                            .font(theme.secondaryFont)
-                                            .foregroundColor(.white)
-                                    }
-                                    if let time = set.elapsedTime {
-                                        Text("Time: \(time)")
-                                            .font(theme.secondaryFont)
-                                            .foregroundColor(.white)
-                                    }
-                                    if let distance = set.distance {
-                                        Text("Distance: \(distance) miles")
-                                            .font(theme.secondaryFont)
-                                            .foregroundColor(.white)
-                                    }
-                                    if let calories = set.calories {
-                                        Text("Calories: \(calories)")
-                                            .font(theme.secondaryFont)
-                                            .foregroundColor(.white)
-                                    }
-                                    if let notes = set.custom {
-                                        Text("Notes: \(notes)")
-                                            .font(theme.secondaryFont)
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                                .padding(.vertical, 5)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    HStack {
-                        Button(action: {
-                            setRecords.append(SetRecord())  // Add a new SetRecord to the list
-                        }) {
-                            Text("Add Set")
+                    // Bottom Buttons
+                    HStack(spacing: 10) {
+                        NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
+                            Text("Exercises")
                         }
                         .font(theme.secondaryFont)
                         .foregroundColor(theme.buttonTextColor)
@@ -173,63 +213,28 @@ struct ContentView: View {
                         .background(theme.buttonBackgroundColor)
                         .cornerRadius(theme.buttonCornerRadius)
 
-                        Spacer()
-
-                        Button(action: saveWorkout) {
-                            Text("Save Workout")
-                                .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
+                        NavigationLink(destination: RoutineListView()) {
+                            Text("Routines")
                         }
                         .font(theme.secondaryFont)
+                        .foregroundColor(theme.buttonTextColor)
                         .padding(theme.buttonPadding)
                         .background(theme.buttonBackgroundColor)
                         .cornerRadius(theme.buttonCornerRadius)
-                        .disabled(!hasValidInput)
-                        .alert(isPresented: $showAlert) {
-                            Alert(title: Text("Workout Saved!"), dismissButton: .default(Text("OK")) {
-                                clearInputFields()
-                            })
+
+                        NavigationLink(destination: WorkoutListView()) {
+                            Text("Saved Workouts")
                         }
+                        .font(theme.secondaryFont)
+                        .foregroundColor(theme.buttonTextColor)
+                        .padding(theme.buttonPadding)
+                        .background(theme.buttonBackgroundColor)
+                        .cornerRadius(theme.buttonCornerRadius)
                     }
-                    .padding(.top, 5)
-                    .padding(.horizontal)
+                    .padding(.bottom, 20) // Add bottom padding for safe area
+                    .padding(.top, 10) // Ensure space between buttons and content
                 }
-                .padding(.top, 20)
-                Spacer(minLength: 0)
-
-                VStack(spacing: 10) {
-                    // Button for Exercises
-                    NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
-                        Text("Exercises")
-                    }
-                    .font(theme.secondaryFont)
-                    .foregroundColor(theme.buttonTextColor)
-                    .padding(theme.buttonPadding)
-                    .background(theme.buttonBackgroundColor)
-                    .cornerRadius(theme.buttonCornerRadius)
-
-                    // Button for Routines
-                    NavigationLink(destination: RoutineListView()) {
-                        Text("Routines")
-                    }
-                    .font(theme.secondaryFont)
-                    .foregroundColor(theme.buttonTextColor)
-                    .padding(theme.buttonPadding)
-                    .background(theme.buttonBackgroundColor)
-                    .cornerRadius(theme.buttonCornerRadius)
-
-                    // Button for Saved Workouts
-                    NavigationLink(destination: WorkoutListView()) {
-                        Text("View Saved Workouts")
-                    }
-                    .font(theme.secondaryFont)
-                    .foregroundColor(theme.buttonTextColor)
-                    .padding(theme.buttonPadding)
-                    .background(theme.buttonBackgroundColor)
-                    .cornerRadius(theme.buttonCornerRadius)
-                }
-                .padding(.bottom, 20)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(theme.backgroundColor.edgesIgnoringSafeArea(.all))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -242,7 +247,8 @@ struct ContentView: View {
                 loadSavedWorkouts()
 
                 // Set up notification for exercise selection
-                NotificationCenter.default.addObserver(forName: Notification.Name("ExerciseSelected"), object: nil, queue: .main) { notification in
+                NotificationCenter.default.addObserver(forName: Notification.Name("ExerciseSelected"), object: nil, queue: .main)
+                { notification in
                     if let exerciseName = notification.object as? String {
                         selectedExerciseType = exerciseName
                     }
@@ -363,33 +369,13 @@ func formatTimestamp(_ date: Date) -> String {
     formatter.dateFormat = "yyyy-MM-dd"  // Customize this format as needed
     return formatter.string(from: date)
 }
-
-// Additional Persistence Functions
-
-func loadRoutineExercises() -> [String] {
-    if let savedRoutines = UserDefaults.standard.data(forKey: "routines"),
-       let decodedRoutines = try? JSONDecoder().decode([Routine].self, from: savedRoutines) {
-        return decodedRoutines.flatMap { routine in
-            routine.exercises.map { $0.name }  // Extract the name of each exercise
-        }
-    }
-    return []
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView(fromRoutine: false)
-            .environment(\.theme, AppTheme()) // Inject the theme for a consistent preview
-    }
-}
-
 // MARK: - Extracted Binding Functions
 
 extension ContentView {
     private func bindingForWeight(at index: Int) -> Binding<String> {
         Binding(
-            get: { setRecords[index].weight ?? "" },  // Use String directly
-            set: { setRecords[index].weight = $0 }  // Set directly
+            get: { setRecords[index].weight ?? "" },
+            set: { setRecords[index].weight = $0 }
         )
     }
 
