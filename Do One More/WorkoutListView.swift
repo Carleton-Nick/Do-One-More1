@@ -134,7 +134,8 @@ struct WorkoutListView: View {
     func loadWorkouts() {
         if let savedWorkouts = UserDefaults.standard.data(forKey: "workouts"),
            let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
-            workouts = decodedWorkouts
+            // Reverse the order of the workouts to display the most recent first
+            workouts = decodedWorkouts.reversed()
         }
     }
 
