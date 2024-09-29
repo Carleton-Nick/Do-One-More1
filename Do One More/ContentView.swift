@@ -54,8 +54,7 @@ struct ContentView: View {
                                         .customPickerStyle()  // Apply the custom style
                                 }
                                 .padding(10)
-                                .onChange(of: selectedExerciseType) { newValue in
-                                    // Update set records when an exercise is selected
+                                .onChange(of: selectedExerciseType) { oldValue, newValue in
                                     if exercises.contains(where: { $0.name == newValue }) {
                                         setRecords = [SetRecord()]
                                     }
