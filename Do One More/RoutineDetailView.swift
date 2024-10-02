@@ -2,62 +2,25 @@ import SwiftUI
 
 struct RoutineDetailView: View {
     var routine: Routine
+    var exercises: [Exercise]  // Ensure this is passed in
     @Binding var routines: [Routine]
     @Environment(\.theme) var theme
 
     var body: some View {
         ZStack {
             theme.backgroundColor.edgesIgnoringSafeArea(.all)
-
             VStack {
-                // Underlined title for the routine
                 UnderlinedTitle(title: routine.name)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.bottom, 20)
-
+                
                 List {
-                    ForEach(routine.items) { item in
+                    ForEach(Array(routine.items.enumerated()), id: \.offset) { index, item in
                         switch item {
                         case .exercise(let exercise):
-                            // Exercise rows with consistent padding
-                            NavigationLink(
-                                destination: ContentView(selectedExerciseType: exercise.name, fromRoutine: true)
-                            ) {
-                                HStack {
-                                    Text(exercise.name)
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                        .padding(.vertical, 10)
-                                        .padding(.horizontal, 10)
-                                        .frame(maxWidth: .infinity, alignment: .center) // Align text to center
-                                        .background(.orange)
-                                        .cornerRadius(8)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(.black, lineWidth: 2)
-                                        )
-                                }
-                            }
-                            .listRowBackground(Color.clear)
-
+                            exerciseRow(exercise: exercise)  // Use helper function below
                         case .header(let name):
-                            // Header rows styled similarly to exercise rows
-                            HStack {
-                                Text("- \(name) -")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 10)
-                                    .frame(maxWidth: .infinity, alignment: .center) // Align text to center
-                                    .background(.gray)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(.white, lineWidth: 2)
-                                    )
-                            }
-                            .listRowBackground(Color.clear)
-                            .padding(.trailing, 12) // Ensure padding consistency with exercises
+                            headerRow(name: name)
                         }
                     }
                 }
@@ -75,6 +38,53 @@ struct RoutineDetailView: View {
                 .cornerRadius(theme.buttonCornerRadius)
         })
     }
+    
+    // MARK: - Helper Views
+    
+    private func exerciseRow(exercise: Exercise) -> some View {
+        NavigationLink(
+            destination: ContentView(
+                exercises: exercises,
+                exerciseRecords: [ExerciseRecord(selectedExerciseType: exercise.name)],
+                fromRoutine: true
+            )
+        ) {
+            HStack {
+                Text(exercise.name)
+                    .font(theme.secondaryFont)
+                    .foregroundColor(.white)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .background(.orange)
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(.black, lineWidth: 2)
+                    )
+            }
+        }
+        .listRowBackground(Color.clear)
+    }
+    
+    private func headerRow(name: String) -> some View {
+        HStack {
+            Text("- \(name) -")
+                .font(theme.secondaryFont)
+                .foregroundColor(.white)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .background(.gray)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.white, lineWidth: 2)
+                )
+        }
+        .listRowBackground(Color.clear)
+        .padding(.trailing, 12)
+    }
 }
 
 struct RoutineDetailView_Previews: PreviewProvider {
@@ -88,6 +98,7 @@ struct RoutineDetailView_Previews: PreviewProvider {
                     .exercise(Exercise(name: "Bench Press", selectedMetrics: []))
                 ]
             ),
+            exercises: [Exercise(name: "Bench Press", selectedMetrics: [])],
             routines: .constant([])
         )
         .environment(\.theme, AppTheme())

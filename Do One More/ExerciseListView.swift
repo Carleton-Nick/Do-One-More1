@@ -108,7 +108,12 @@ struct ExerciseListView: View {
 
     // Handle deleting an exercise
     func deleteExercise(at offsets: IndexSet) {
-        exercises.remove(atOffsets: offsets)
+        for index in offsets {
+            let exerciseToDelete = sortedExercises[index] // Get the exercise to delete from the sorted list
+            if let originalIndex = exercises.firstIndex(of: exerciseToDelete) { // Find the original index in exercises
+                exercises.remove(at: originalIndex) // Remove the item from the original list
+            }
+        }
         UserDefaultsManager.saveExercises(exercises)
     }
 }

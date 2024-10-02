@@ -1,10 +1,3 @@
-//
-//  Do_One_MoreApp.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 6/26/24.
-//
-
 import SwiftUI
 
 @main
@@ -38,8 +31,11 @@ struct Do_One_MoreApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.theme, AppTheme()) // Inject the theme globally
+            ContentView(
+                exercises: UserDefaultsManager.loadExercises(),
+                exerciseRecords: [ExerciseRecord()]
+            )
+            .environment(\.theme, AppTheme()) // Inject the theme globally
         }
     }
 }
