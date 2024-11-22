@@ -104,82 +104,66 @@ struct ContentView: View {
                                     }
                                 }
                                 
-                                // Display historical workout data if showHistoricalData is true
-                                if exerciseRecord.showHistoricalData,
-                                   let recentWorkout = findMostRecentWorkout(for: exerciseRecord.selectedExerciseType) {
-                                    VStack(alignment: .leading) {
-                                        HStack {
+                                // Replace the "X" button with a toggle button
+                                if let recentWorkout = findMostRecentWorkout(for: exerciseRecord.selectedExerciseType) {
+                                    if exerciseRecord.showHistoricalData {
+                                        VStack(alignment: .leading) {
                                             Text("Last \(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
                                                 .font(theme.primaryFont)
                                                 .foregroundColor(.orange)
-                                            Spacer()
                                             
-                                            // "X" button to hide historical data
-                                            Button(action: {
-                                                exerciseRecord.showHistoricalData = false
-                                            }) {
-                                                Image(systemName: "xmark.circle")
-                                                    .foregroundColor(.gray)
+                                            ForEach(recentWorkout.sets, id: \.self) { set in
+                                                HStack {
+                                                    if let weight = set.weight {
+                                                        Text("Weight: \(weight) lbs")
+                                                            .font(theme.secondaryFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let reps = set.reps {
+                                                        Text("Reps: \(reps)")
+                                                            .font(theme.secondaryFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let time = set.elapsedTime {
+                                                        Text("Time: \(time)")
+                                                            .font(theme.secondaryFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let distance = set.distance {
+                                                        Text("Distance: \(distance) miles")
+                                                            .font(theme.secondaryFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let calories = set.calories {
+                                                        Text("Calories: \(calories)")
+                                                            .font(theme.secondaryFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let notes = set.custom {
+                                                        Text("Notes: \(notes)")
+                                                            .font(theme.secondaryFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                }
+                                                .padding(.vertical, 5)
                                             }
-                                            .buttonStyle(BorderlessButtonStyle()) // Avoids unintended interactions with the list
                                         }
-                                        .padding(.top, 10)
-                                        
-                                        // Workout details
-                                        ForEach(recentWorkout.sets, id: \.self) { set in
-                                            HStack {
-                                                if let weight = set.weight {
-                                                    Text("Weight: \(weight) lbs")
-                                                        .font(theme.secondaryFont)
-                                                        .foregroundColor(.white)
-                                                }
-                                                if let reps = set.reps {
-                                                    Text("Reps: \(reps)")
-                                                        .font(theme.secondaryFont)
-                                                        .foregroundColor(.white)
-                                                }
-                                                if let time = set.elapsedTime {
-                                                    Text("Time: \(time)")
-                                                        .font(theme.secondaryFont)
-                                                        .foregroundColor(.white)
-                                                }
-                                                if let distance = set.distance {
-                                                    Text("Distance: \(distance) miles")
-                                                        .font(theme.secondaryFont)
-                                                        .foregroundColor(.white)
-                                                }
-                                                if let calories = set.calories {
-                                                    Text("Calories: \(calories)")
-                                                        .font(theme.secondaryFont)
-                                                        .foregroundColor(.white)
-                                                }
-                                                if let notes = set.custom {
-                                                    Text("Notes: \(notes)")
-                                                        .font(theme.secondaryFont)
-                                                        .foregroundColor(.white)
-                                                }
-                                            }
-                                            .padding(.vertical, 5)
+                                        .padding(.horizontal)
+                                    }
+                                    
+                                    // Show/Hide button
+                                        Button(action: {
+                                            exerciseRecord.showHistoricalData.toggle()
+                                        }) {
+                                            Text(exerciseRecord.showHistoricalData
+                                                 ? "Hide"
+                                                 : "Show Last \(recentWorkout.exerciseType)")
+                                                .font(theme.secondaryFont)
+                                                .foregroundColor(.orange)
+                                                .padding(.top, 5)
                                         }
+                                        .buttonStyle(BorderlessButtonStyle())
                                     }
-                                    .padding(.horizontal)
-                                }
-                                
-                                // Add Set Button for each exercise
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        exerciseRecord.setRecords.append(SetRecord())
-                                    }) {
-                                        Text("Add Set")
-                                    }
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(theme.buttonTextColor)
-                                    .padding(theme.buttonPadding)
-                                    .background(theme.buttonBackgroundColor)
-                                    .cornerRadius(theme.buttonCornerRadius)
-                                    .padding(.trailing, UIScreen.main.bounds.width * 0.04) // Add 5% padding to the right
-                                }
                             }
                             .padding(.top, 10)
                         }
