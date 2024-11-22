@@ -277,42 +277,61 @@ struct ContentView: View {
             return AnyView(
                 TextField("Weight (lbs)", text: bindingForWeight(at: index, in: records))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: records[index].weight.wrappedValue == nil, placeholder: "Weight (lbs)")
+                    .customPlaceholder(
+                        show: records[index].weight.wrappedValue == nil || records[index].weight.wrappedValue!.isEmpty,
+                        placeholder: "Weight (lbs)"
+                    )
                     .keyboardType(.numberPad)
             )
         case .reps:
             return AnyView(
                 TextField("Reps", text: bindingForReps(at: index, in: records))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: records[index].reps.wrappedValue == nil, placeholder: "Reps")
+                    .customPlaceholder(
+                        show: records[index].reps.wrappedValue == nil ||
+                        records[index].reps.wrappedValue!.isEmpty,
+                        placeholder: "Reps"
+                        )
                     .keyboardType(.numberPad)
             )
         case .time:
             return AnyView(
                 TextField("Time (h:m:s)", text: bindingForElapsedTime(at: index, in: records))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: records[index].elapsedTime.wrappedValue == nil, placeholder: "Elapsed Time")
+                    .customPlaceholder(
+                        show: records[index].elapsedTime.wrappedValue == nil ||
+                        records[index].elapsedTime.wrappedValue!.isEmpty,
+                        placeholder: "Elapsed Time")
                     .keyboardType(.default)
             )
         case .distance:
             return AnyView(
                 TextField("Distance (miles)", text: bindingForDistance(at: index, in: records))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: records[index].distance.wrappedValue == nil, placeholder: "Distance")
+                    .customPlaceholder(
+                        show: records[index].distance.wrappedValue == nil ||
+                        records[index].distance.wrappedValue!.isEmpty,
+                        placeholder: "Distance")
                     .keyboardType(.default)
             )
         case .calories:
             return AnyView(
                 TextField("Calories burned", text: bindingForCalories(at: index, in: records))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: records[index].calories.wrappedValue == nil, placeholder: "Calories burned")
+                    .customPlaceholder(
+                        show: records[index].calories.wrappedValue == nil ||
+                        records[index].calories.wrappedValue!.isEmpty,
+                        placeholder: "Calories burned")
                     .keyboardType(.numberPad)
             )
         case .custom:
             return AnyView(
                 TextField("Enter notes", text: bindingForCustomNotes(at: index, in: records))
                     .customFormFieldStyle()
-                    .customPlaceholder(show: records[index].custom.wrappedValue == nil, placeholder: "Enter notes")
+                    .customPlaceholder(
+                        show: records[index].custom.wrappedValue == nil ||
+                        records[index].custom.wrappedValue!.isEmpty,
+                        placeholder: "Enter notes")
                     .keyboardType(.default)
             )
         }
