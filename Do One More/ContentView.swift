@@ -59,6 +59,7 @@ struct ContentView: View {
                                 if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
                                     ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { index, _ in
                                         VStack {
+                                            // First row of inputs: Weight and Reps
                                             if currentExercise.selectedMetrics.contains(.weight) || currentExercise.selectedMetrics.contains(.reps) {
                                                 HStack {
                                                     if currentExercise.selectedMetrics.contains(.weight) {
@@ -69,10 +70,22 @@ struct ContentView: View {
                                                         createTextField(for: .reps, at: index, in: $exerciseRecord.setRecords)
                                                             .frame(maxWidth: .infinity)
                                                     }
+                                                    
+                                                    // Add "X" button if this is the first row and more than one set exists
+                                                    if exerciseRecord.setRecords.count > 1 {
+                                                        Button(action: {
+                                                            exerciseRecord.setRecords.remove(at: index)
+                                                        }) {
+                                                            Image(systemName: "xmark.circle")
+                                                                .foregroundColor(.red)
+                                                                .padding(.leading, 8)
+                                                        }
+                                                    }
                                                 }
                                                 .padding(.horizontal)
                                             }
-                                            
+
+                                            // Second row of inputs: Time and Distance
                                             if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
                                                 HStack {
                                                     if currentExercise.selectedMetrics.contains(.time) {
@@ -86,7 +99,8 @@ struct ContentView: View {
                                                 }
                                                 .padding(.horizontal)
                                             }
-                                            
+
+                                            // Third row of inputs: Calories and Custom Notes
                                             if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
                                                 HStack {
                                                     if currentExercise.selectedMetrics.contains(.calories) {
@@ -101,6 +115,25 @@ struct ContentView: View {
                                                 .padding(.horizontal)
                                             }
                                         }
+                                        .padding(.vertical, 8) // Add spacing between sets
+                                    }
+                                }
+                                
+                                // Add Set Button for each exercise
+                                if !exerciseRecord.selectedExerciseType.isEmpty {
+                                    HStack {
+                                        Spacer()
+                                        Button(action: {
+                                            exerciseRecord.setRecords.append(SetRecord())
+                                        }) {
+                                            Text("Add Set")
+                                        }
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(theme.buttonTextColor)
+                                        .padding(theme.buttonPadding)
+                                        .background(theme.buttonBackgroundColor)
+                                        .cornerRadius(theme.buttonCornerRadius)
+                                        .padding(.trailing, UIScreen.main.bounds.width * 0.04) // Add 5% padding to the right
                                     }
                                 }
                                 
