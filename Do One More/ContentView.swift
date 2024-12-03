@@ -32,7 +32,7 @@ struct ContentView: View {
                 
                 VStack {
                     ScrollView {
-                        ForEach($exerciseRecords) { $exerciseRecord in
+                        ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
                             VStack(spacing: 20) {
                                 // Exercise Picker for each record
                                 HStack {
@@ -53,7 +53,22 @@ struct ContentView: View {
                                     .padding(10)
                                     .frame(maxWidth: .infinity)
                                     .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
+                                    
+                                    // bracket used to be here in old version
+                                    
+                                    // Minus button to remove the exercise record (only visible if more than one record exists)
+                                    if exerciseRecords.count > 1 {
+                                        Button(action: {
+                                            exerciseRecords.remove(at: index)
+                                        }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .foregroundColor(.orange)
+                                                .padding(.leading, 8)
+                                        }
+                                        .buttonStyle(BorderlessButtonStyle())
+                                    }
                                 }
+                                    
                                 .padding(.horizontal)
                                 
                                 if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
@@ -77,7 +92,7 @@ struct ContentView: View {
                                                             exerciseRecord.setRecords.remove(at: index)
                                                         }) {
                                                             Image(systemName: "xmark.circle")
-                                                                .foregroundColor(.red)
+                                                                .foregroundColor(.orange)
                                                                 .padding(.leading, 8)
                                                         }
                                                     }
