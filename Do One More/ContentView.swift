@@ -26,12 +26,12 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                theme.backgroundColor.edgesIgnoringSafeArea(.all)
-                
-                VStack {
-                    ScrollView {
+            NavigationStack {
+                ZStack {
+                    theme.backgroundColor.edgesIgnoringSafeArea(.all)
+                    
+                    VStack {
+                        ScrollView {
                         ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
                             VStack(spacing: 20) {
                                 // Exercise Picker for each record
@@ -250,57 +250,43 @@ struct ContentView: View {
                         .padding(.horizontal)
                     }
                     
-                    Spacer() // Pushes the bottom navigation buttons to the bottom
-                    
-                    // Bottom navigation buttons
-                    HStack {
-                        NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
-                            Text("Exercises")
+                        Spacer() // Pushes content to the top
+                                        }
+                                    }
+                .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                // Add the title in the principal placement
+                                ToolbarItem(placement: .principal) {
+                                    UnderlinedTitle(title: "Do One More")
+                                }
+                                
+                                // Add the menu in the leading placement
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    Menu {
+                                        NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
+                                            Text("Exercises")
+                                        }
+                                        
+                                        NavigationLink(destination: RoutineListView()) {
+                                            Text("Routines")
+                                        }
+                                        
+                                        NavigationLink(destination: WorkoutListView()) {
+                                            Text("View Past Workouts")
+                                        }
+                                    } label: {
+                                        Label("Menu", systemImage: "line.3.horizontal")
+                                            .foregroundColor(theme.buttonTextColor)
+                                    }
+                                }
+                            }
+                            .onAppear {
+                                exercises = UserDefaultsManager.loadExercises()
+                                loadSavedWorkouts()
+                            }
+                            .preferredColorScheme(.dark) // Force dark mode for the menu
                         }
-                        .font(theme.secondaryFont)
-                        .foregroundColor(theme.buttonTextColor)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
-                        
-                        Spacer()
-                        
-                        NavigationLink(destination: RoutineListView()) {
-                            Text("Routines")
-                        }
-                        .font(theme.secondaryFont)
-                        .foregroundColor(theme.buttonTextColor)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
-                        
-                        Spacer()
-                        
-                        NavigationLink(destination: WorkoutListView()) {
-                            Text("View Past Workouts")
-                        }
-                        .font(theme.secondaryFont)
-                        .foregroundColor(theme.buttonTextColor)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    UnderlinedTitle(title: "Do One More")
-                }
-            }
-            .onAppear {
-                exercises = UserDefaultsManager.loadExercises()
-                loadSavedWorkouts()
-            }
-        }
-    }
     
     // Helper Function to Create Text Fields for a specific metric
     private func createTextField(for metric: ExerciseMetric, at index: Int, in records: Binding<[SetRecord]>) -> some View {
