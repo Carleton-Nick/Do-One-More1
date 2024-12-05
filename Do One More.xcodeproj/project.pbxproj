@@ -37,6 +37,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E5013C922D021993003012E6 /* Do-One-More-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Do-One-More-Info.plist"; sourceTree = SOURCE_ROOT; };
 		E5375E952C74FBB70056F69D /* CustomSectionHeaderStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSectionHeaderStyle.swift; sourceTree = "<group>"; };
 		E5375E972C74FBD90056F69D /* CustomFormFieldStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFormFieldStyle.swift; sourceTree = "<group>"; };
 		E5375E9B2C750E1D0056F69D /* CustomPlaceholderModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPlaceholderModifier.swift; sourceTree = "<group>"; };
@@ -97,6 +98,7 @@
 		E59964882C2CD7F200168FA6 /* Do One More */ = {
 			isa = PBXGroup;
 			children = (
+				E5013C922D021993003012E6 /* Do-One-More-Info.plist */,
 				E585C7672C6EA71900FF46FE /* AppTheme.swift */,
 				E599648D2C2CD7F300168FA6 /* Assets.xcassets */,
 				E599648B2C2CD7F200168FA6 /* ContentView.swift */,
@@ -367,6 +369,7 @@
 				DEVELOPMENT_TEAM = 73BLF9GT4R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Do-One-More-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -381,7 +384,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -396,6 +399,7 @@
 				DEVELOPMENT_TEAM = 73BLF9GT4R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Do-One-More-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -410,7 +414,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
