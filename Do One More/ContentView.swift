@@ -26,14 +26,15 @@ struct ContentView: View {
     }
     
     var body: some View {
-            NavigationStack {
-                ZStack {
-                    theme.backgroundColor.edgesIgnoringSafeArea(.all)
-                    
-                    VStack {
-                        ScrollView {
+        NavigationStack {
+            ZStack {
+                theme.backgroundColor.edgesIgnoringSafeArea(.all)
+                
+                VStack {
+                    ScrollView {
                         ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
-                            VStack(spacing: 20) {
+                            // This spacing affects vertical space between sets
+                            VStack(spacing: 10) {
                                 // Exercise Picker for each record
                                 HStack {
                                     Menu {
@@ -52,9 +53,7 @@ struct ContentView: View {
                                     }
                                     .padding(10)
                                     .frame(maxWidth: .infinity)
-                                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 1))
-                                    
-                                    // bracket used to be here in old version
+                                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 3))
                                     
                                     // Minus button to remove the exercise record (only visible if more than one record exists)
                                     if exerciseRecords.count > 1 {
@@ -68,15 +67,14 @@ struct ContentView: View {
                                         .buttonStyle(BorderlessButtonStyle())
                                     }
                                 }
-                                    
                                 .padding(.horizontal)
                                 
                                 if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
                                     ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { index, _ in
-                                        VStack {
+                                        VStack(spacing: 10) { // Adds vertical space between input fields that are displayed top down (not left/right)
                                             // First row of inputs: Weight and Reps
                                             if currentExercise.selectedMetrics.contains(.weight) || currentExercise.selectedMetrics.contains(.reps) {
-                                                HStack {
+                                                HStack(spacing: 10) { // Adds horizontal space between input fields that are displayed 50/50 left/right
                                                     if currentExercise.selectedMetrics.contains(.weight) {
                                                         createTextField(for: .weight, at: index, in: $exerciseRecord.setRecords)
                                                             .frame(maxWidth: .infinity)
@@ -85,21 +83,19 @@ struct ContentView: View {
                                                         createTextField(for: .reps, at: index, in: $exerciseRecord.setRecords)
                                                             .frame(maxWidth: .infinity)
                                                     }
-                                                    
-                                                    // Add "X" button if this is the first row and more than one set exists
+
                                                     if exerciseRecord.setRecords.count > 1 {
                                                         Button(action: {
                                                             exerciseRecord.setRecords.remove(at: index)
                                                         }) {
                                                             Image(systemName: "xmark.circle")
                                                                 .foregroundColor(.orange)
-                                                                .padding(.leading, 8)
                                                         }
                                                     }
                                                 }
-                                                .padding(.horizontal)
+                                                .padding(.horizontal) // Keep horizontal padding for alignment
                                             }
-
+                                            
                                             // Second row of inputs: Time and Distance
                                             if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
                                                 HStack {
@@ -114,7 +110,7 @@ struct ContentView: View {
                                                 }
                                                 .padding(.horizontal)
                                             }
-
+                                            
                                             // Third row of inputs: Calories and Custom Notes
                                             if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
                                                 HStack {
@@ -130,7 +126,7 @@ struct ContentView: View {
                                                 .padding(.horizontal)
                                             }
                                         }
-                                        .padding(.vertical, 8) // Add spacing between sets
+                                        .padding(.vertical, 0) // Adjust spacing between sets here.  This does affect accordingly, but cannot remove the last 10 points or so.  Leaving at zero until able to remove uknown padding. 
                                     }
                                 }
                                 
@@ -193,28 +189,28 @@ struct ContentView: View {
                                                             .foregroundColor(.white)
                                                     }
                                                 }
-                                                .padding(.vertical, 5)
                                             }
                                         }
                                         .padding(.horizontal)
                                     }
                                     
                                     // Show/Hide button
-                                        Button(action: {
-                                            exerciseRecord.showHistoricalData.toggle()
-                                        }) {
-                                            Text(exerciseRecord.showHistoricalData
-                                                 ? "Hide"
-                                                 : "Show Last \(recentWorkout.exerciseType)")
-                                                .font(theme.secondaryFont)
-                                                .foregroundColor(.orange)
-                                                .padding(.top, 5)
-                                        }
-                                        .buttonStyle(BorderlessButtonStyle())
+                                    Button(action: {
+                                        exerciseRecord.showHistoricalData.toggle()
+                                    }) {
+                                        Text(exerciseRecord.showHistoricalData
+                                             ? "Hide"
+                                             : "Show Last \(recentWorkout.exerciseType)")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.orange)
+                                        .padding(.top, 5)
                                     }
+                                    .buttonStyle(BorderlessButtonStyle())
+                                }
                             }
                             .padding(.top, 10)
-                        }
+                            // .background(Color.green.opacity(0.2)) // Debug VStack Spacing
+                            }
                         
                         // Save Workout and Add New Exercise Buttons in the same line
                         HStack {
@@ -232,7 +228,7 @@ struct ContentView: View {
                                     clearInputFields()
                                 })
                             }
-
+                            
                             Spacer()
                             
                             Button(action: {
@@ -249,45 +245,52 @@ struct ContentView: View {
                         .padding(.top, 20)
                         .padding(.horizontal)
                     }
-                    
+                    // Makes keyboard hide when you tap away from input field
+                    .onTapGesture {
+                        hideKeyboard()
+                        
                         Spacer() // Pushes content to the top
-                                        }
-                                    }
+                    }
+                }
                 .navigationBarTitleDisplayMode(.inline)
-                            .toolbar {
-                                // Add the title in the principal placement
-                                ToolbarItem(placement: .principal) {
-                                    UnderlinedTitle(title: "Do One More")
-                                }
-                                
-                                // Add the menu in the leading placement
-                                ToolbarItem(placement: .navigationBarLeading) {
-                                    Menu {
-                                        NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
-                                            Text("Exercises")
-                                        }
-                                        
-                                        NavigationLink(destination: RoutineListView()) {
-                                            Text("Routines")
-                                        }
-                                        
-                                        NavigationLink(destination: WorkoutListView()) {
-                                            Text("View Past Workouts")
-                                        }
-                                    } label: {
-                                        Label("Menu", systemImage: "line.3.horizontal")
-                                            .foregroundColor(theme.buttonTextColor)
-                                    }
-                                }
+                .toolbar {
+                    // Add the title in the principal placement
+                    ToolbarItem(placement: .principal) {
+                        UnderlinedTitle(title: "Do One More")
+                    }
+                    
+                    // Add the menu in the leading placement
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Menu {
+                            NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
+                                Text("Exercises")
                             }
-                            .onAppear {
-                                exercises = UserDefaultsManager.loadExercises()
-                                loadSavedWorkouts()
+                            
+                            NavigationLink(destination: RoutineListView()) {
+                                Text("Routines")
                             }
-                            .preferredColorScheme(.dark) // Force dark mode for the menu
+                            
+                            NavigationLink(destination: WorkoutListView()) {
+                                Text("View Past Workouts")
+                            }
+                        } label: {
+                            Label("Menu", systemImage: "line.3.horizontal")
+                                .foregroundColor(theme.buttonTextColor)
                         }
                     }
-    
+                }
+                .onAppear {
+                    exercises = UserDefaultsManager.loadExercises()
+                    loadSavedWorkouts()
+                }
+                .preferredColorScheme(.dark) // Force dark mode for the menu
+            }
+        }
+    }
+    // Helper function to hide keyboard when user taps away from input field
+        func hideKeyboard() {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
     // Helper Function to Create Text Fields for a specific metric
     private func createTextField(for metric: ExerciseMetric, at index: Int, in records: Binding<[SetRecord]>) -> some View {
         switch metric {

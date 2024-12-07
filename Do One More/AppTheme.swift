@@ -41,7 +41,7 @@ struct UnderlinedTitle: View {
                 .foregroundColor(theme.buttonTextColor)
             Rectangle()
                 .fill(theme.primaryColor)
-                .frame(height: 2)
+                .frame(height: 3)
         }
     }
 }

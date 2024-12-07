@@ -10,10 +10,8 @@ struct CustomFormFieldStyle: ViewModifier {
             .background(theme.backgroundColor) // Match the background with your app's theme
             .cornerRadius(5) // Optional: Rounds the corners slightly
             .foregroundColor(.white) // Set the text input color to white
-            .overlay(
-                RoundedRectangle(cornerRadius: 5)
-                    .stroke(Color.orange, lineWidth: 1) // Optional: Add a thin border if needed
-            )
+            RoundedRectangle(cornerRadius: 5)
+            .stroke(Color.orange, lineWidth: 2) // Optional: Add a thin border if needed
     }
 }
 

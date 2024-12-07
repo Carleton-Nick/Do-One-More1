@@ -1,10 +1,3 @@
-//
-//  CustomSectionHeaderStyle.swift
-//  Do One More
-//
-//  Created by Nick Carleton on 8/20/24.
-//
-
 import SwiftUI
 
 struct CustomSectionHeaderStyle: ViewModifier {
