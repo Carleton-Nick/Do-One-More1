@@ -248,8 +248,6 @@ struct ContentView: View {
                     // Makes keyboard hide when you tap away from input field
                     .onTapGesture {
                         hideKeyboard()
-                        
-                        Spacer() // Pushes content to the top
                     }
                 }
                 .navigationBarTitleDisplayMode(.inline)
