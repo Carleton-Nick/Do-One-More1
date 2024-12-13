@@ -32,13 +32,18 @@ struct NewExerciseView: View {
                     .font(theme.secondaryFont)
                     .foregroundColor(.white)
                     .padding()
-                    .background(theme.backgroundColor)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(theme.primaryColor, lineWidth: 1)
                     )
-                    .customPlaceholder(show: exerciseName.isEmpty, placeholder: "New Exercise Name")
+                    .customPlaceholder(
+                        show: exerciseName.isEmpty,
+                        placeholder: "New Exercise Name",
+                        placeholderColor: .gray
+                    )
+                    .autocapitalization(.words)
+                    .textInputAutocapitalization(.words)
                     .padding(.bottom, 20)
 
                 Text("Select Metrics")

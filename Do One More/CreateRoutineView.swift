@@ -28,20 +28,25 @@ struct CreateRoutineView: View {
             VStack(alignment: .leading) {
                 // Section: Routine Name
                 VStack(alignment: .leading, spacing: 10) {
-
-                        TextField("", text: $routineName)
+                    
+                    TextField("", text: $routineName)
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
                         .padding()
-                        .background(theme.backgroundColor)
-                        .cornerRadius(5)
+                        .cornerRadius(8)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 5)
+                            RoundedRectangle(cornerRadius: 8)
                                 .stroke(theme.primaryColor, lineWidth: 1)
                         )
-                        .customPlaceholder(show: routineName.isEmpty, placeholder: "Routine Name")
+                        .customPlaceholder(
+                            show: routineName.isEmpty,
+                            placeholder: "New Routine Name",
+                            placeholderColor: .gray // Use contrasting color
+                        )
+                        .autocapitalization(.words)
+                        .textInputAutocapitalization(.words)
+                        .padding(.horizontal)
                 }
-                .padding(.horizontal)
 
                 // All Exercises Section
                 VStack(alignment: .leading, spacing: 10) {

@@ -43,15 +43,20 @@ struct EditRoutineView: View {
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
                         .padding()
-                        .background(theme.backgroundColor)
-                        .cornerRadius(5)
+                        .cornerRadius(8)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 5)
+                            RoundedRectangle(cornerRadius: 8)
                                 .stroke(theme.primaryColor, lineWidth: 1)
                         )
-                        .customPlaceholder(show: routineName.isEmpty, placeholder: "Name")
+                        .customPlaceholder(
+                            show: routineName.isEmpty,
+                            placeholder: "Edit Routine Name",
+                            placeholderColor: .gray // Use contrasting color
+                        )
+                        .autocapitalization(.words)
+                        .textInputAutocapitalization(.words)
+                        .padding(.horizontal)
                 }
-                .padding(.horizontal)
                 
                 // All Exercises Section
                 VStack(alignment: .leading, spacing: 10) {

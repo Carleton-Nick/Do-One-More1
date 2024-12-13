@@ -38,15 +38,20 @@ struct EditExerciseView: View {
                 // Input Field for Exercise Name with Placeholder
                 TextField("", text: $exerciseName)
                     .font(theme.secondaryFont)
-                    .foregroundColor(.white)
+                    .foregroundColor(.white) // Keep or remove based on testing
                     .padding()
-                    .background(theme.backgroundColor)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(theme.primaryColor, lineWidth: 1)
                     )
-                    .customPlaceholder(show: exerciseName.isEmpty, placeholder: "Edit Exercise Name")
+                    .customPlaceholder(
+                        show: exerciseName.isEmpty,
+                        placeholder: "Edit Exercise Name",
+                        placeholderColor: .gray
+                    )
+                    .autocapitalization(.words)
+                    .textInputAutocapitalization(.words)
                     .padding(.bottom, 20)
 
                 Text("Edit Metrics")

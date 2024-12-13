@@ -71,32 +71,29 @@ struct ContentView: View {
                                 
                                 if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
                                     ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { index, _ in
-                                        VStack(spacing: 10) { // Adds vertical space between input fields that are displayed top down (not left/right)
-                                            // First row of inputs: Weight and Reps
-                                            if currentExercise.selectedMetrics.contains(.weight) || currentExercise.selectedMetrics.contains(.reps) {
-                                                HStack(spacing: 10) { // Adds horizontal space between input fields that are displayed 50/50 left/right
-                                                    if currentExercise.selectedMetrics.contains(.weight) {
-                                                        createTextField(for: .weight, at: index, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
-                                                    if currentExercise.selectedMetrics.contains(.reps) {
-                                                        createTextField(for: .reps, at: index, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
+                                        VStack(spacing: 10) { // Adjust vertical spacing between sets
+                                            
+                                            // Input fields for the selected metrics with "X" button on the right
+                                            HStack {
+                                                ForEach(currentExercise.selectedMetrics, id: \.self) { metric in
+                                                    createTextField(for: metric, at: index, in: $exerciseRecord.setRecords)
+                                                        .frame(maxWidth: .infinity)
+                                                }
 
-                                                    if exerciseRecord.setRecords.count > 1 {
-                                                        Button(action: {
-                                                            exerciseRecord.setRecords.remove(at: index)
-                                                        }) {
-                                                            Image(systemName: "xmark.circle")
-                                                                .foregroundColor(.orange)
-                                                        }
+                                                // Add "X" button for removing a set (only if more than one set exists)
+                                                if exerciseRecord.setRecords.count > 1 {
+                                                    Button(action: {
+                                                        exerciseRecord.setRecords.remove(at: index)
+                                                    }) {
+                                                        Image(systemName: "xmark.circle")
+                                                            .foregroundColor(.orange)
+                                                            .padding(.leading, 8)
                                                     }
                                                 }
-                                                .padding(.horizontal) // Keep horizontal padding for alignment
                                             }
-                                            
-                                            // Second row of inputs: Time and Distance
+                                            .padding(.horizontal)
+
+                                            // Additional rows for metrics that require specific groupings (if needed)
                                             if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
                                                 HStack {
                                                     if currentExercise.selectedMetrics.contains(.time) {
@@ -110,8 +107,7 @@ struct ContentView: View {
                                                 }
                                                 .padding(.horizontal)
                                             }
-                                            
-                                            // Third row of inputs: Calories and Custom Notes
+
                                             if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
                                                 HStack {
                                                     if currentExercise.selectedMetrics.contains(.calories) {
@@ -126,7 +122,7 @@ struct ContentView: View {
                                                 .padding(.horizontal)
                                             }
                                         }
-                                        .padding(.vertical, 0) // Adjust spacing between sets here.  This does affect accordingly, but cannot remove the last 10 points or so.  Leaving at zero until able to remove uknown padding. 
+                                        .padding(.vertical, 0) // Adjust spacing between sets here
                                     }
                                 }
                                 
@@ -278,7 +274,7 @@ struct ContentView: View {
                     }
                 }
                 .onAppear {
-                    exercises = UserDefaultsManager.loadExercises()
+                    exercises = UserDefaultsManager.loadOrCreateExercises() // Load exercises or use preloaded ones
                     loadSavedWorkouts()
                 }
                 .preferredColorScheme(.dark) // Force dark mode for the menu
@@ -298,7 +294,8 @@ struct ContentView: View {
                     .customFormFieldStyle()
                     .customPlaceholder(
                         show: records[index].weight.wrappedValue == nil || records[index].weight.wrappedValue!.isEmpty,
-                        placeholder: "Weight (lbs)"
+                        placeholder: "Weight (lbs)",
+                        placeholderColor: .gray // Optional: Adjust placeholder color
                     )
                     .keyboardType(.numberPad)
             )
@@ -309,7 +306,8 @@ struct ContentView: View {
                     .customPlaceholder(
                         show: records[index].reps.wrappedValue == nil ||
                         records[index].reps.wrappedValue!.isEmpty,
-                        placeholder: "Reps"
+                        placeholder: "Reps",
+                        placeholderColor: .gray // Optional: Adjust placeholder color
                         )
                     .keyboardType(.numberPad)
             )
@@ -320,7 +318,9 @@ struct ContentView: View {
                     .customPlaceholder(
                         show: records[index].elapsedTime.wrappedValue == nil ||
                         records[index].elapsedTime.wrappedValue!.isEmpty,
-                        placeholder: "Elapsed Time")
+                        placeholder: "Elapsed Time",
+                        placeholderColor: .gray // Optional: Adjust placeholder color
+                        )
                     .keyboardType(.default)
             )
         case .distance:
@@ -330,7 +330,9 @@ struct ContentView: View {
                     .customPlaceholder(
                         show: records[index].distance.wrappedValue == nil ||
                         records[index].distance.wrappedValue!.isEmpty,
-                        placeholder: "Distance")
+                        placeholder: "Distance",
+                        placeholderColor: .gray // Optional: Adjust placeholder color
+                        )
                     .keyboardType(.default)
             )
         case .calories:
@@ -340,7 +342,9 @@ struct ContentView: View {
                     .customPlaceholder(
                         show: records[index].calories.wrappedValue == nil ||
                         records[index].calories.wrappedValue!.isEmpty,
-                        placeholder: "Calories burned")
+                        placeholder: "Calories burned",
+                        placeholderColor: .gray // Optional: Adjust placeholder color
+                        )
                     .keyboardType(.numberPad)
             )
         case .custom:
@@ -350,7 +354,9 @@ struct ContentView: View {
                     .customPlaceholder(
                         show: records[index].custom.wrappedValue == nil ||
                         records[index].custom.wrappedValue!.isEmpty,
-                        placeholder: "Enter notes")
+                        placeholder: "Enter notes",
+                        placeholderColor: .gray // Optional: Adjust placeholder color
+                        )
                     .keyboardType(.default)
             )
         }

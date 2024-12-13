@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E5013C962D0A1274003012E6 /* PreloadedExercises.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5013C952D0A1274003012E6 /* PreloadedExercises.swift */; };
 		E5375E962C74FBB70056F69D /* CustomSectionHeaderStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E952C74FBB70056F69D /* CustomSectionHeaderStyle.swift */; };
 		E5375E982C74FBD90056F69D /* CustomFormFieldStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E972C74FBD90056F69D /* CustomFormFieldStyle.swift */; };
 		E5375E9C2C750E1D0056F69D /* CustomPlaceholderModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5375E9B2C750E1D0056F69D /* CustomPlaceholderModifier.swift */; };
@@ -38,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		E5013C922D021993003012E6 /* Do-One-More-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Do-One-More-Info.plist"; sourceTree = SOURCE_ROOT; };
+		E5013C952D0A1274003012E6 /* PreloadedExercises.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreloadedExercises.swift; sourceTree = "<group>"; };
 		E5375E952C74FBB70056F69D /* CustomSectionHeaderStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSectionHeaderStyle.swift; sourceTree = "<group>"; };
 		E5375E972C74FBD90056F69D /* CustomFormFieldStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFormFieldStyle.swift; sourceTree = "<group>"; };
 		E5375E9B2C750E1D0056F69D /* CustomPlaceholderModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPlaceholderModifier.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 				E59964A02C2CD8C400168FA6 /* RoutineListView.swift */,
 				E570D84C2C6E93EE00652705 /* SetRecord.swift */,
 				E56F0A2A2C8B725F00F277FF /* UserDefaults.swift */,
+				E5013C952D0A1274003012E6 /* PreloadedExercises.swift */,
 				E599649C2C2CD86900168FA6 /* Workout.swift */,
 				E59964AA2C2CD9E900168FA6 /* WorkoutListView.swift */,
 			);
@@ -228,6 +231,7 @@
 				E59964A12C2CD8C400168FA6 /* RoutineListView.swift in Sources */,
 				E59964A32C2CD8E000168FA6 /* RoutineDetailView.swift in Sources */,
 				E5E90D972C8A984100884EAE /* ExerciseListView.swift in Sources */,
+				E5013C962D0A1274003012E6 /* PreloadedExercises.swift in Sources */,
 				E5E90D9D2C8A991100884EAE /* EditExerciseView.swift in Sources */,
 				E585C76A2C6EA76200FF46FE /* CustomButtonStyle.swift in Sources */,
 				E56F0A2B2C8B725F00F277FF /* UserDefaults.swift in Sources */,

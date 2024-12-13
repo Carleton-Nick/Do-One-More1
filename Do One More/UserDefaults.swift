@@ -24,6 +24,15 @@ class UserDefaultsManager {
         }
         return []
     }
+
+    static func loadOrCreateExercises() -> [Exercise] {
+        let savedExercises = loadExercises()
+        if savedExercises.isEmpty {
+            saveExercises(PreloadedExercises.exercises) // Save pre-loaded exercises if none exist
+            return PreloadedExercises.exercises
+        }
+        return savedExercises
+    }
     
     // MARK: - Routines
 
