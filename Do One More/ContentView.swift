@@ -75,26 +75,24 @@ struct ContentView: View {
                                             // Chunk the selected metrics into groups of 2
                                             ForEach(Array(stride(from: 0, to: currentExercise.selectedMetrics.count, by: 2)), id: \.self) { chunkStartIndex in
                                                 HStack {
+                                                    // Metrics in the current chunk
                                                     ForEach(currentExercise.selectedMetrics[chunkStartIndex..<min(chunkStartIndex + 2, currentExercise.selectedMetrics.count)], id: \.self) { metric in
                                                         createTextField(for: metric, at: setIndex, in: $exerciseRecord.setRecords)
                                                             .frame(maxWidth: .infinity)
                                                     }
-                                                }
-                                                .padding(.horizontal)
-                                            }
 
-                                            // "X" Button to remove the set
-                                            if exerciseRecord.setRecords.count > 1 {
-                                                HStack {
-                                                    Spacer() // Push the button to the right
-                                                    Button(action: {
-                                                        exerciseRecord.setRecords.remove(at: setIndex)
-                                                    }) {
-                                                        Image(systemName: "xmark.circle")
-                                                            .foregroundColor(.orange)
+                                                    // Add "X" button in the first row (top input fields only)
+                                                    if chunkStartIndex == 0 && exerciseRecord.setRecords.count > 1 {
+                                                        Button(action: {
+                                                            exerciseRecord.setRecords.remove(at: setIndex)
+                                                        }) {
+                                                            Image(systemName: "xmark.circle")
+                                                                .foregroundColor(.orange)
+                                                        }
+                                                        .padding(.leading, 8)
                                                     }
                                                 }
-                                                .padding(.top, 5)
+                                                .padding(.horizontal)
                                             }
                                         }
                                         .padding(.vertical, 0) // Adjust spacing between sets here
