@@ -70,56 +70,31 @@ struct ContentView: View {
                                 .padding(.horizontal)
                                 
                                 if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
-                                    ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { index, _ in
-                                        VStack(spacing: 10) { // Adjust vertical spacing between sets
-                                            
-                                            // Input fields for the selected metrics with "X" button on the right
-                                            HStack {
-                                                ForEach(currentExercise.selectedMetrics, id: \.self) { metric in
-                                                    createTextField(for: metric, at: index, in: $exerciseRecord.setRecords)
-                                                        .frame(maxWidth: .infinity)
+                                    ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { setIndex, _ in
+                                        VStack(spacing: 10) {
+                                            // Chunk the selected metrics into groups of 2
+                                            ForEach(Array(stride(from: 0, to: currentExercise.selectedMetrics.count, by: 2)), id: \.self) { chunkStartIndex in
+                                                HStack {
+                                                    ForEach(currentExercise.selectedMetrics[chunkStartIndex..<min(chunkStartIndex + 2, currentExercise.selectedMetrics.count)], id: \.self) { metric in
+                                                        createTextField(for: metric, at: setIndex, in: $exerciseRecord.setRecords)
+                                                            .frame(maxWidth: .infinity)
+                                                    }
                                                 }
+                                                .padding(.horizontal)
+                                            }
 
-                                                // Add "X" button for removing a set (only if more than one set exists)
-                                                if exerciseRecord.setRecords.count > 1 {
+                                            // "X" Button to remove the set
+                                            if exerciseRecord.setRecords.count > 1 {
+                                                HStack {
+                                                    Spacer() // Push the button to the right
                                                     Button(action: {
-                                                        exerciseRecord.setRecords.remove(at: index)
+                                                        exerciseRecord.setRecords.remove(at: setIndex)
                                                     }) {
                                                         Image(systemName: "xmark.circle")
                                                             .foregroundColor(.orange)
-                                                            .padding(.leading, 8)
                                                     }
                                                 }
-                                            }
-                                            .padding(.horizontal)
-
-                                            // Additional rows for metrics that require specific groupings (if needed)
-                                            if currentExercise.selectedMetrics.contains(.time) || currentExercise.selectedMetrics.contains(.distance) {
-                                                HStack {
-                                                    if currentExercise.selectedMetrics.contains(.time) {
-                                                        createTextField(for: .time, at: index, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
-                                                    if currentExercise.selectedMetrics.contains(.distance) {
-                                                        createTextField(for: .distance, at: index, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
-                                                }
-                                                .padding(.horizontal)
-                                            }
-
-                                            if currentExercise.selectedMetrics.contains(.calories) || currentExercise.selectedMetrics.contains(.custom) {
-                                                HStack {
-                                                    if currentExercise.selectedMetrics.contains(.calories) {
-                                                        createTextField(for: .calories, at: index, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
-                                                    if currentExercise.selectedMetrics.contains(.custom) {
-                                                        createTextField(for: .custom, at: index, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
-                                                }
-                                                .padding(.horizontal)
+                                                .padding(.top, 5)
                                             }
                                         }
                                         .padding(.vertical, 0) // Adjust spacing between sets here
