@@ -8,267 +8,332 @@ struct ContentView: View {
     @State private var showingNewExerciseView = false
     var fromRoutine: Bool = false
     @Environment(\.theme) var theme
-    
-    // Initializer
+
     init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false) {
         self._exercises = State(initialValue: exercises)
         self._exerciseRecords = State(initialValue: exerciseRecords)
         self.fromRoutine = fromRoutine
     }
-    
-    // Check if all exercises have valid input
+
     var hasValidInput: Bool {
-        return exerciseRecords.allSatisfy { record in
-            !record.selectedExerciseType.isEmpty && record.setRecords.allSatisfy { set in
-                set.weight != nil || set.reps != nil || set.elapsedTime != nil || set.distance != nil || set.calories != nil || set.custom != nil
+        exerciseRecords.allSatisfy { record in
+            !record.selectedExerciseType.isEmpty &&
+            record.setRecords.allSatisfy { set in
+                !(set.weight?.isEmpty ?? true) ||
+                !(set.reps?.isEmpty ?? true) ||
+                !(set.elapsedTime?.isEmpty ?? true) ||
+                !(set.distance?.isEmpty ?? true) ||
+                !(set.calories?.isEmpty ?? true) ||
+                !(set.custom?.isEmpty ?? true)
             }
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 theme.backgroundColor.edgesIgnoringSafeArea(.all)
-                
                 VStack {
-                    ScrollView {
-                        ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
-                            // This spacing affects vertical space between sets
-                            VStack(spacing: 10) {
-                                // Exercise Picker for each record
-                                HStack {
-                                    Menu {
-                                        Picker(selection: $exerciseRecord.selectedExerciseType) {
-                                            ForEach(exercises.sorted(by: { $0.name < $1.name }).map { $0.name }, id: \.self) { exercise in
-                                                Text(exercise)
-                                            }
-                                        } label: {
-                                            EmptyView()
-                                        }
-                                    } label: {
-                                        Text(exerciseRecord.selectedExerciseType.isEmpty ? "Choose an exercise" : exerciseRecord.selectedExerciseType)
-                                            .customPickerStyle()
-                                        Image(systemName: "chevron.up.chevron.down")
-                                            .customPickerStyle()
-                                    }
-                                    .padding(10)
-                                    .frame(maxWidth: .infinity)
-                                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 3))
-                                    
-                                    // Minus button to remove the exercise record (only visible if more than one record exists)
-                                    if exerciseRecords.count > 1 {
-                                        Button(action: {
-                                            exerciseRecords.remove(at: index)
-                                        }) {
-                                            Image(systemName: "minus.circle.fill")
-                                                .foregroundColor(.orange)
-                                                .padding(.leading, 8)
-                                        }
-                                        .buttonStyle(BorderlessButtonStyle())
-                                    }
-                                }
-                                .padding(.horizontal)
-                                
-                                if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
-                                    ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { setIndex, _ in
-                                        VStack(spacing: 10) {
-                                            // Chunk the selected metrics into groups of 2
-                                            ForEach(Array(stride(from: 0, to: currentExercise.selectedMetrics.count, by: 2)), id: \.self) { chunkStartIndex in
-                                                HStack {
-                                                    // Metrics in the current chunk
-                                                    ForEach(currentExercise.selectedMetrics[chunkStartIndex..<min(chunkStartIndex + 2, currentExercise.selectedMetrics.count)], id: \.self) { metric in
-                                                        createTextField(for: metric, at: setIndex, in: $exerciseRecord.setRecords)
-                                                            .frame(maxWidth: .infinity)
-                                                    }
+                    exerciseRecordsList() // List of Exercise Records
+                    SaveAndAddButtons(
+                        exerciseRecords: $exerciseRecords,
+                        hasValidInput: hasValidInput, // Pass the updated `hasValidInput`
+                        saveWorkoutAction: saveWorkout,
+                        showAlert: $showAlert, // Bind the alert state
+                        theme: theme
+                    )
+                }
+                .onTapGesture { hideKeyboard() }
+                .onChange(of: exerciseRecords) { oldRecords, newRecords in
+                    UserDefaultsManager.saveExerciseRecords(newRecords)
 
-                                                    // Add "X" button in the first row (top input fields only)
-                                                    if chunkStartIndex == 0 && exerciseRecord.setRecords.count > 1 {
-                                                        Button(action: {
-                                                            exerciseRecord.setRecords.remove(at: setIndex)
-                                                        }) {
-                                                            Image(systemName: "xmark.circle")
-                                                                .foregroundColor(.orange)
-                                                        }
-                                                        .padding(.leading, 8)
-                                                    }
-                                                }
-                                                .padding(.horizontal)
-                                            }
-                                        }
-                                        .padding(.vertical, 0) // Adjust spacing between sets here
-                                    }
-                                }
-                                
-                                // Add Set Button for each exercise
-                                if !exerciseRecord.selectedExerciseType.isEmpty {
-                                    HStack {
-                                        Spacer()
-                                        Button(action: {
-                                            exerciseRecord.setRecords.append(SetRecord())
-                                        }) {
-                                            Text("Add Set")
-                                        }
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(theme.buttonTextColor)
-                                        .padding(theme.buttonPadding)
-                                        .background(theme.buttonBackgroundColor)
-                                        .cornerRadius(theme.buttonCornerRadius)
-                                        .padding(.trailing, UIScreen.main.bounds.width * 0.04) // Add 5% padding to the right
-                                    }
-                                }
-                                
-                                // Replace the "X" button with a toggle button
-                                if let recentWorkout = findMostRecentWorkout(for: exerciseRecord.selectedExerciseType) {
-                                    if exerciseRecord.showHistoricalData {
-                                        VStack(alignment: .leading) {
-                                            Text("Last \(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
-                                                .font(theme.primaryFont)
-                                                .foregroundColor(.orange)
-                                            
-                                            ForEach(recentWorkout.sets, id: \.self) { set in
-                                                HStack {
-                                                    if let weight = set.weight {
-                                                        Text("Weight: \(weight) lbs")
-                                                            .font(theme.secondaryFont)
-                                                            .foregroundColor(.white)
-                                                    }
-                                                    if let reps = set.reps {
-                                                        Text("Reps: \(reps)")
-                                                            .font(theme.secondaryFont)
-                                                            .foregroundColor(.white)
-                                                    }
-                                                    if let time = set.elapsedTime {
-                                                        Text("Time: \(time)")
-                                                            .font(theme.secondaryFont)
-                                                            .foregroundColor(.white)
-                                                    }
-                                                    if let distance = set.distance {
-                                                        Text("Distance: \(distance) miles")
-                                                            .font(theme.secondaryFont)
-                                                            .foregroundColor(.white)
-                                                    }
-                                                    if let calories = set.calories {
-                                                        Text("Calories: \(calories)")
-                                                            .font(theme.secondaryFont)
-                                                            .foregroundColor(.white)
-                                                    }
-                                                    if let notes = set.custom {
-                                                        Text("Notes: \(notes)")
-                                                            .font(theme.secondaryFont)
-                                                            .foregroundColor(.white)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        .padding(.horizontal)
-                                    }
-                                    
-                                    // Show/Hide button
-                                    Button(action: {
-                                        exerciseRecord.showHistoricalData.toggle()
-                                    }) {
-                                        Text(exerciseRecord.showHistoricalData
-                                             ? "Hide"
-                                             : "Show Last \(recentWorkout.exerciseType)")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.orange)
-                                        .padding(.top, 5)
-                                    }
-                                    .buttonStyle(BorderlessButtonStyle())
-                                }
-                            }
-                            .padding(.top, 10)
-                            // .background(Color.green.opacity(0.2)) // Debug VStack Spacing
-                            }
-                        
-                        // Save Workout and Add New Exercise Buttons in the same line
-                        HStack {
-                            Button(action: saveWorkout) {
-                                Text("Save Workout")
-                                    .foregroundColor(hasValidInput ? theme.buttonTextColor : Color.gray)
-                            }
-                            .font(theme.secondaryFont)
-                            .padding(theme.buttonPadding)
-                            .background(theme.buttonBackgroundColor)
-                            .cornerRadius(theme.buttonCornerRadius)
-                            .disabled(!hasValidInput)
-                            .alert(isPresented: $showAlert) {
-                                Alert(title: Text("Workout Saved!"), dismissButton: .default(Text("OK")) {
-                                    clearInputFields()
-                                })
-                            }
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                exerciseRecords.append(ExerciseRecord()) // Add new exercise record
-                            }) {
-                                Text("Track Another Exercise")
-                            }
-                            .font(theme.secondaryFont)
-                            .foregroundColor(theme.buttonTextColor)
-                            .padding(theme.buttonPadding)
-                            .background(theme.buttonBackgroundColor)
-                            .cornerRadius(theme.buttonCornerRadius)
+                    // Additional logic
+                    let isInputValid = newRecords.allSatisfy { record in
+                        !record.selectedExerciseType.isEmpty &&
+                        record.setRecords.allSatisfy { set in
+                            !(set.weight?.isEmpty ?? true) ||
+                            !(set.reps?.isEmpty ?? true) ||
+                            !(set.elapsedTime?.isEmpty ?? true) ||
+                            !(set.distance?.isEmpty ?? true) ||
+                            !(set.calories?.isEmpty ?? true) ||
+                            !(set.custom?.isEmpty ?? true)
                         }
-                        .padding(.top, 20)
-                        .padding(.horizontal)
-                    }
-                    // Makes keyboard hide when you tap away from input field
-                    .onTapGesture {
-                        hideKeyboard()
                     }
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    // Add the title in the principal placement
-                    ToolbarItem(placement: .principal) {
-                        UnderlinedTitle(title: "Do One More")
-                    }
-                    
-                    // Add the menu in the leading placement
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Menu {
-                            NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
-                                Text("Exercises")
-                            }
-                            
-                            NavigationLink(destination: RoutineListView()) {
-                                Text("Routines")
-                            }
-                            
-                            NavigationLink(destination: WorkoutListView()) {
-                                Text("View Past Workouts")
-                            }
-                        } label: {
-                            Label("Menu", systemImage: "line.3.horizontal")
-                                .foregroundColor(theme.buttonTextColor)
-                        }
-                    }
+                    toolbarItems()
                 }
                 .onAppear {
-                    exercises = UserDefaultsManager.loadOrCreateExercises() // Load exercises or use preloaded ones
+                    exercises = UserDefaultsManager.loadOrCreateExercises()
                     loadSavedWorkouts()
                 }
-                .preferredColorScheme(.dark) // Force dark mode for the menu
             }
         }
     }
+    
+    private func exerciseRecordsList() -> some View {
+        ScrollView {
+            ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
+                ExerciseRecordView(
+                    exerciseRecord: $exerciseRecord,
+                    exercises: exercises,
+                    exerciseRecords: $exerciseRecords,
+                    index: index,
+                    theme: theme,
+                    createTextField: createTextField,
+                    findMostRecentWorkout: findMostRecentWorkout(for:)
+                )
+            }
+        }
+    }
+    
+    private func toolbarItems() -> some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .principal) {
+                UnderlinedTitle(title: "Do One More")
+            }
+            ToolbarItem(placement: .navigationBarLeading) {
+                MenuView(exercises: $exercises, theme: theme)
+            }
+        }
+    }
+    
+    struct ExerciseRecordView: View {
+        @Binding var exerciseRecord: ExerciseRecord
+        var exercises: [Exercise]
+        @Binding var exerciseRecords: [ExerciseRecord]
+        var index: Int
+        var theme: AppTheme
+        var createTextField: (ExerciseMetric, Int, Binding<[SetRecord]>) -> AnyView
+        var findMostRecentWorkout: (String) -> Workout? // Accept the function as a parameter
+
+        var body: some View {
+            VStack(spacing: 10) {
+                // Picker for selecting an exercise
+                HStack {
+                    Menu {
+                        Picker(selection: $exerciseRecord.selectedExerciseType) {
+                            ForEach(exercises.sorted(by: { $0.name < $1.name }).map { $0.name }, id: \.self) { exercise in
+                                Text(exercise)
+                            }
+                        } label: {
+                            EmptyView()
+                        }
+                    } label: {
+                        Text(exerciseRecord.selectedExerciseType.isEmpty ? "Choose an exercise" : exerciseRecord.selectedExerciseType)
+                            .customPickerStyle()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .customPickerStyle()
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(theme.primaryColor, lineWidth: 3))
+
+                    // Remove button if more than one exercise record exists
+                    if exerciseRecords.count > 1 {
+                        Button(action: { exerciseRecords.remove(at: index) }) {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundColor(.orange)
+                                .padding(.leading, 8)
+                        }
+                        .buttonStyle(BorderlessButtonStyle())
+                    }
+                }
+                .padding(.horizontal)
+
+                // Input fields for metrics
+                if let currentExercise = exercises.first(where: { $0.name == exerciseRecord.selectedExerciseType }) {
+                    ForEach(Array(exerciseRecord.setRecords.enumerated()), id: \.offset) { setIndex, _ in
+                        VStack(spacing: 10) {
+                            ForEach(Array(stride(from: 0, to: currentExercise.selectedMetrics.count, by: 2)), id: \.self) { chunkStartIndex in
+                                HStack {
+                                    ForEach(currentExercise.selectedMetrics[chunkStartIndex..<min(chunkStartIndex + 2, currentExercise.selectedMetrics.count)], id: \.self) { metric in
+                                        createTextField(metric, setIndex, $exerciseRecord.setRecords)
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    if chunkStartIndex == 0 && exerciseRecord.setRecords.count > 1 {
+                                        Button(action: { exerciseRecord.setRecords.remove(at: setIndex) }) {
+                                            Image(systemName: "xmark.circle")
+                                                .foregroundColor(.orange)
+                                        }
+                                        .padding(.leading, 8)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                        .padding(.vertical, 0)
+                    }
+                }
+
+                // Add Set Button for each exercise
+                if !exerciseRecord.selectedExerciseType.isEmpty {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            exerciseRecord.setRecords.append(SetRecord())
+                        }) {
+                            Text("Add Set")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                                .padding(.trailing, UIScreen.main.bounds.width * 0.04) // Add 5% padding to the right
+                                .padding(.bottom, 8)
+                        }
+                    }
+                }
+
+                // Show Historical Data Section
+                if let recentWorkout = findMostRecentWorkout(exerciseRecord.selectedExerciseType) {
+                                if exerciseRecord.showHistoricalData {
+                                    VStack(alignment: .leading) {
+                                        Text("Last \(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
+                                            .font(theme.primaryFont)
+                                            .foregroundColor(.orange)
+
+                                        ForEach(recentWorkout.sets, id: \.self) { set in
+                                            HStack {
+                                                if let weight = set.weight {
+                                                    Text("Weight: \(weight) lbs")
+                                                        .font(theme.secondaryFont)
+                                                        .foregroundColor(.white)
+                                                }
+                                                if let reps = set.reps {
+                                                    Text("Reps: \(reps)")
+                                                        .font(theme.secondaryFont)
+                                                        .foregroundColor(.white)
+                                                }
+                                                if let time = set.elapsedTime {
+                                                    Text("Time: \(time)")
+                                                        .font(theme.secondaryFont)
+                                                        .foregroundColor(.white)
+                                                }
+                                                if let distance = set.distance {
+                                                    Text("Distance: \(distance) miles")
+                                                        .font(theme.secondaryFont)
+                                                        .foregroundColor(.white)
+                                                }
+                                                if let calories = set.calories {
+                                                    Text("Calories: \(calories)")
+                                                        .font(theme.secondaryFont)
+                                                        .foregroundColor(.white)
+                                                }
+                                                if let notes = set.custom {
+                                                    Text("Notes: \(notes)")
+                                                        .font(theme.secondaryFont)
+                                                        .foregroundColor(.white)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
+
+                                Button(action: {
+                                    exerciseRecord.showHistoricalData.toggle()
+                                }) {
+                                    Text(exerciseRecord.showHistoricalData ? "Hide" : "Show Last \(recentWorkout.exerciseType)")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.orange)
+                                        .padding(.top, 5)
+                                }
+                                .buttonStyle(BorderlessButtonStyle())
+                            }
+                        }
+                    }
+                }
+
+    struct SaveAndAddButtons: View {
+        @Binding var exerciseRecords: [ExerciseRecord]
+        var hasValidInput: Bool
+        var saveWorkoutAction: () -> Void
+        @Binding var showAlert: Bool // Add showAlert as a binding
+        var theme: AppTheme
+
+        var body: some View {
+            HStack {
+                Button(action: {
+                    if hasValidInput {
+                        saveWorkoutAction()
+                        showAlert = true // Show the alert when saving is successful
+                    } else {
+                        showAlert = true // Trigger the alert when input is invalid
+                    }
+                }) {
+                    Text("Save Workout")
+                        .foregroundColor(hasValidInput ? theme.buttonTextColor : .gray)
+                }
+                .font(theme.secondaryFont)
+                .padding(theme.buttonPadding)
+                .background(theme.buttonBackgroundColor)
+                .cornerRadius(theme.buttonCornerRadius)
+                .disabled(!hasValidInput)
+                .alert(isPresented: $showAlert) {
+                    Alert(title: Text("Workout Saved!"), dismissButton: .default(Text("OK")) {
+                        clearInputFields()
+                    })
+                }
+
+                Spacer()
+
+                Button(action: { exerciseRecords.append(ExerciseRecord()) }) {
+                    Text("Track Another Exercise")
+                }
+                .font(theme.secondaryFont)
+                .foregroundColor(theme.buttonTextColor)
+                .padding(theme.buttonPadding)
+                .background(theme.buttonBackgroundColor)
+                .cornerRadius(theme.buttonCornerRadius)
+            }
+            .padding(.top, 20)
+            .padding(.horizontal)
+        }
+
+        private func clearInputFields() {
+            exerciseRecords = [ExerciseRecord()]
+        }
+    }
+
+struct MenuView: View {
+    @Binding var exercises: [Exercise]
+    var theme: AppTheme
+
+    var body: some View {
+        Menu {
+            NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
+                Text("Exercises")
+            }
+            NavigationLink(destination: RoutineListView()) {
+                Text("Routines")
+            }
+            NavigationLink(destination: WorkoutListView()) {
+                Text("View Past Workouts")
+            }
+        } label: {
+            Label("Menu", systemImage: "line.3.horizontal")
+                .foregroundColor(theme.buttonTextColor)
+                .preferredColorScheme(.dark) // Force dark mode for the menu
+        }
+    }
+}
+
     // Helper function to hide keyboard when user taps away from input field
         func hideKeyboard() {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
     // Helper Function to Create Text Fields for a specific metric
-    private func createTextField(for metric: ExerciseMetric, at index: Int, in records: Binding<[SetRecord]>) -> some View {
+    private func createTextField(for metric: ExerciseMetric, at index: Int, in records: Binding<[SetRecord]>) -> AnyView {
         switch metric {
         case .weight:
             return AnyView(
                 TextField("Weight (lbs)", text: bindingForWeight(at: index, in: records))
                     .customFormFieldStyle()
                     .customPlaceholder(
-                        show: records[index].weight.wrappedValue == nil || records[index].weight.wrappedValue!.isEmpty,
-                        placeholder: "Weight (lbs)",
-                        placeholderColor: .gray // Optional: Adjust placeholder color
+                        show: records[index].weight.wrappedValue?.isEmpty ?? true,
+                        placeholder: "Weight (lbs)"
                     )
                     .keyboardType(.numberPad)
             )
@@ -277,11 +342,9 @@ struct ContentView: View {
                 TextField("Reps", text: bindingForReps(at: index, in: records))
                     .customFormFieldStyle()
                     .customPlaceholder(
-                        show: records[index].reps.wrappedValue == nil ||
-                        records[index].reps.wrappedValue!.isEmpty,
-                        placeholder: "Reps",
-                        placeholderColor: .gray // Optional: Adjust placeholder color
-                        )
+                        show: records[index].reps.wrappedValue?.isEmpty ?? true,
+                        placeholder: "Reps"
+                    )
                     .keyboardType(.numberPad)
             )
         case .time:
@@ -289,11 +352,9 @@ struct ContentView: View {
                 TextField("Time (h:m:s)", text: bindingForElapsedTime(at: index, in: records))
                     .customFormFieldStyle()
                     .customPlaceholder(
-                        show: records[index].elapsedTime.wrappedValue == nil ||
-                        records[index].elapsedTime.wrappedValue!.isEmpty,
-                        placeholder: "Elapsed Time",
-                        placeholderColor: .gray // Optional: Adjust placeholder color
-                        )
+                        show: records[index].elapsedTime.wrappedValue?.isEmpty ?? true,
+                        placeholder: "Time"
+                    )
                     .keyboardType(.default)
             )
         case .distance:
@@ -301,35 +362,29 @@ struct ContentView: View {
                 TextField("Distance (miles)", text: bindingForDistance(at: index, in: records))
                     .customFormFieldStyle()
                     .customPlaceholder(
-                        show: records[index].distance.wrappedValue == nil ||
-                        records[index].distance.wrappedValue!.isEmpty,
-                        placeholder: "Distance",
-                        placeholderColor: .gray // Optional: Adjust placeholder color
-                        )
+                        show: records[index].distance.wrappedValue?.isEmpty ?? true,
+                        placeholder: "Distance"
+                    )
                     .keyboardType(.default)
             )
         case .calories:
             return AnyView(
-                TextField("Calories burned", text: bindingForCalories(at: index, in: records))
+                TextField("Calories", text: bindingForCalories(at: index, in: records))
                     .customFormFieldStyle()
                     .customPlaceholder(
-                        show: records[index].calories.wrappedValue == nil ||
-                        records[index].calories.wrappedValue!.isEmpty,
-                        placeholder: "Calories burned",
-                        placeholderColor: .gray // Optional: Adjust placeholder color
-                        )
+                        show: records[index].calories.wrappedValue?.isEmpty ?? true,
+                        placeholder: "Calories"
+                    )
                     .keyboardType(.numberPad)
             )
         case .custom:
             return AnyView(
-                TextField("Enter notes", text: bindingForCustomNotes(at: index, in: records))
+                TextField("Notes", text: bindingForCustomNotes(at: index, in: records))
                     .customFormFieldStyle()
                     .customPlaceholder(
-                        show: records[index].custom.wrappedValue == nil ||
-                        records[index].custom.wrappedValue!.isEmpty,
-                        placeholder: "Enter notes",
-                        placeholderColor: .gray // Optional: Adjust placeholder color
-                        )
+                        show: records[index].custom.wrappedValue?.isEmpty ?? true,
+                        placeholder: "Notes"
+                    )
                     .keyboardType(.default)
             )
         }

@@ -4,65 +4,91 @@ class UserDefaultsManager {
     
     // MARK: - Keys
     private enum Keys {
-        static let exercises = "exercises"
-        static let routines = "routines"
-        static let workouts = "workouts"
+        case exercises
+        case routines
+        case workouts
+        case exerciseRecords
+
+        var rawValue: String {
+            switch self {
+            case .exercises: return "exercises"
+            case .routines: return "routines"
+            case .workouts: return "workouts"
+            case .exerciseRecords: return "exerciseRecords"
+            }
+        }
     }
     
+    // MARK: - Generic Helpers
+
+    private static func save<T: Encodable>(_ value: T, forKey key: String) {
+        if let encoded = try? JSONEncoder().encode(value) {
+            UserDefaults.standard.set(encoded, forKey: key)
+        }
+    }
+
+    private static func load<T: Decodable>(forKey key: String) -> T? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
+    }
+
     // MARK: - Exercises
 
     static func saveExercises(_ exercises: [Exercise]) {
-        if let encoded = try? JSONEncoder().encode(exercises) {
-            UserDefaults.standard.set(encoded, forKey: Keys.exercises)
-        }
+        save(exercises, forKey: Keys.exercises.rawValue)
     }
 
     static func loadExercises() -> [Exercise] {
-        if let data = UserDefaults.standard.data(forKey: Keys.exercises),
-           let decoded = try? JSONDecoder().decode([Exercise].self, from: data) {
-            return decoded
-        }
-        return []
+        return load(forKey: Keys.exercises.rawValue) ?? []
     }
 
     static func loadOrCreateExercises() -> [Exercise] {
         let savedExercises = loadExercises()
         if savedExercises.isEmpty {
-            saveExercises(PreloadedExercises.exercises) // Save pre-loaded exercises if none exist
+            saveExercises(PreloadedExercises.exercises)
             return PreloadedExercises.exercises
         }
         return savedExercises
     }
-    
+
     // MARK: - Routines
 
     static func saveRoutines(_ routines: [Routine]) {
-        if let encoded = try? JSONEncoder().encode(routines) {
-            UserDefaults.standard.set(encoded, forKey: Keys.routines)
-        }
+        save(routines, forKey: Keys.routines.rawValue)
     }
 
     static func loadRoutines() -> [Routine] {
-        if let data = UserDefaults.standard.data(forKey: Keys.routines),
-           let decoded = try? JSONDecoder().decode([Routine].self, from: data) {
-            return decoded
-        }
-        return []
+        return load(forKey: Keys.routines.rawValue) ?? []
     }
-    
+
     // MARK: - Workouts
 
     static func saveWorkouts(_ workouts: [Workout]) {
-        if let encoded = try? JSONEncoder().encode(workouts) {
-            UserDefaults.standard.set(encoded, forKey: Keys.workouts)
-        }
+        save(workouts, forKey: Keys.workouts.rawValue)
     }
 
     static func loadWorkouts() -> [Workout] {
-        if let data = UserDefaults.standard.data(forKey: Keys.workouts),
-           let decoded = try? JSONDecoder().decode([Workout].self, from: data) {
-            return decoded
-        }
-        return []
+        return load(forKey: Keys.workouts.rawValue) ?? []
+    }
+
+    // MARK: - Exercise Records
+
+    static func saveExerciseRecords(_ records: [ExerciseRecord]) {
+        save(records, forKey: Keys.exerciseRecords.rawValue)
+    }
+
+    static func loadExerciseRecords() -> [ExerciseRecord] {
+        return load(forKey: Keys.exerciseRecords.rawValue) ?? []
+    }
+
+    // MARK: - Reset Methods
+
+    static func reset(forKey key: String) {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
+
+    static func resetAll() {
+        let domain = Bundle.main.bundleIdentifier!
+        UserDefaults.standard.removePersistentDomain(forName: domain)
     }
 }

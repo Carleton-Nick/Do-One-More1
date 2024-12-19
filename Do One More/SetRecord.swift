@@ -1,11 +1,10 @@
 import Foundation
 
-struct SetRecord: Identifiable, Codable, Hashable {
-    var id = UUID()
-    var weight: String?     // Change from Int? to String?
-    var reps: String?       // Change from Int? to String?
-    var elapsedTime: String?  // Already a String?
-    var distance: String?   // Change from Double? to String?
-    var calories: String?   // Change from Int? to String?
-    var custom: String?     // Already a String?
+struct SetRecord: Codable, Hashable {
+    var weight: String?
+    var reps: String?
+    var elapsedTime: String?
+    var distance: String?
+    var calories: String?
+    var custom: String?
 }

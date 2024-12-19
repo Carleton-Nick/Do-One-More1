@@ -1,6 +1,6 @@
 import Foundation
 
-struct ExerciseRecord: Identifiable {
+struct ExerciseRecord: Identifiable, Codable, Equatable {
     var id = UUID()
     var selectedExerciseType: String = ""
     var setRecords: [SetRecord] = [SetRecord()]
