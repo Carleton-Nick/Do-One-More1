@@ -27,29 +27,27 @@ struct WorkoutListView: View {
                 .padding(.top, 8)  // Add slight padding below the top
 
                 // List of workouts
-                List(workouts, id: \.exerciseType) { workout in
+                List(workouts.indices, id: \.self) { index in
                     VStack(alignment: .leading, spacing: 10) {
                         // Display the exercise type with a light orange border
-                        Text(workout.exerciseType)
+                        Text(workouts[index].exerciseType)
                             .font(theme.primaryFont)
                             .foregroundColor(.orange)
                             .padding(.vertical, 5)
                             .padding(.horizontal)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.orange, lineWidth: 2) // Light orange border
+                                    .stroke(Color.orange, lineWidth: 2)
                             )
                         
-                        // Display the date and time of the workout
-                        Text("Date: \(formatTimestamp(workout.timestamp))")
+                        Text("Date: \(formatTimestamp(workouts[index].timestamp))")
                             .font(theme.secondaryFont)
                             .foregroundColor(.white)
-
-                        // Display each set in the workout
-                        ForEach(Array(workout.sets.enumerated()), id: \.offset) { index, set in
+                        
+                        ForEach(Array(workouts[index].sets.enumerated()), id: \.offset) { setIndex, set in
                             VStack(alignment: .leading, spacing: 5) {
                                 // Set number with light orange underline
-                                Text("Set \(index + 1)")
+                                Text("Set \(setIndex + 1)")
                                     .font(theme.primaryFont)
                                     .foregroundColor(.white)
                                     .padding(.bottom, 2)
@@ -105,16 +103,27 @@ struct WorkoutListView: View {
                             .background(Color.black.opacity(0.2)) // Light background for each set
                             .cornerRadius(8)
                         }
-                    }
-                    .padding(8)
-                    .background(theme.backgroundColor) // Match the background to the app’s theme
-                    .cornerRadius(8)
-                    .listRowBackground(theme.backgroundColor) // Set the row background color to match the theme
-                }
+                        // Edit button
+                               NavigationLink(destination: EditWorkoutView(workout: $workouts[index]) { updatedWorkout in
+                                   workouts[index] = updatedWorkout
+                                   saveWorkouts()
+                               }) {
+                                   Text("Edit")
+                                       .font(theme.secondaryFont)
+                                       .foregroundColor(theme.buttonTextColor)
+                                       .padding(8)
+                                       .background(theme.buttonBackgroundColor)
+                                       .cornerRadius(8)
+                               }
+                           }
+                           .padding(8)
+                           .background(theme.backgroundColor)
+                           .cornerRadius(8)
+                           .listRowBackground(theme.backgroundColor)
+                       }
                 .scrollContentBackground(.hidden) // Hide the default list background
                 .listStyle(PlainListStyle()) // Simplify the list style to avoid additional padding
             }
-
             // Export CSV Button at the bottom-right corner
             Button(action: {
                 shareCSV(workouts: workouts) // Trigger CSV share
@@ -136,6 +145,12 @@ struct WorkoutListView: View {
            let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
             // Reverse the order of the workouts to display the most recent first
             workouts = decodedWorkouts.reversed()
+        }
+    }
+    
+    func saveWorkouts() {
+        if let encoded = try? JSONEncoder().encode(workouts) {
+            UserDefaults.standard.set(encoded, forKey: "workouts")
         }
     }
 
@@ -206,7 +221,31 @@ struct WorkoutListView: View {
 
 struct WorkoutListView_Previews: PreviewProvider {
     static var previews: some View {
-        WorkoutListView()
-            .environment(\.theme, AppTheme()) // Preview with the theme applied
+        NavigationView {
+            WorkoutListView()
+                .environment(\.theme, AppTheme())
+                .onAppear {
+                    // Add sample workout data for preview
+                    let sampleWorkouts = [
+                        Workout(
+                            exerciseType: "Bench Press",
+                            sets: [
+                                SetRecord(weight: "135", reps: "10"),
+                                SetRecord(weight: "155", reps: "8")
+                            ],
+                            timestamp: Date()
+                        ),
+                        Workout(
+                            exerciseType: "Squats",
+                            sets: [
+                                SetRecord(weight: "225", reps: "5"),
+                                SetRecord(weight: "245", reps: "3")
+                            ],
+                            timestamp: Date().addingTimeInterval(-86400) // Yesterday
+                        )
+                    ]
+                    UserDefaultsManager.saveWorkouts(sampleWorkouts)
+                }
+        }
     }
 }

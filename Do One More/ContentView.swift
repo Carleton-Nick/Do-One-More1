@@ -2,31 +2,45 @@ import SwiftUI
 
 struct ContentView: View {
     @State var exercises: [Exercise] = []
-    @State var exerciseRecords: [ExerciseRecord] = [ExerciseRecord()]
+    @State var exerciseRecords: [ExerciseRecord]
     @State var savedWorkouts: [Workout] = []
     @State private var showAlert = false
     @State private var showingNewExerciseView = false
     var fromRoutine: Bool = false
+    var clearExistingRecords: Bool = false
     @Environment(\.theme) var theme
 
-    init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false) {
+    var hasValidInput: Bool {
+        for record in exerciseRecords {
+            if record.selectedExerciseType.isEmpty {
+                return false
+            }
+            for set in record.setRecords {
+                if !set.weight.isNilOrEmpty && !set.reps.isNilOrEmpty {
+                    return true
+                }
+                if !set.elapsedTime.isNilOrEmpty {
+                    return true
+                }
+                if !set.distance.isNilOrEmpty {
+                    return true
+                }
+                if !set.calories.isNilOrEmpty {
+                    return true
+                }
+                if !set.custom.isNilOrEmpty {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false, clearExistingRecords: Bool = false) {
         self._exercises = State(initialValue: exercises)
         self._exerciseRecords = State(initialValue: exerciseRecords)
         self.fromRoutine = fromRoutine
-    }
-
-    var hasValidInput: Bool {
-        exerciseRecords.allSatisfy { record in
-            !record.selectedExerciseType.isEmpty &&
-            record.setRecords.allSatisfy { set in
-                !(set.weight?.isEmpty ?? true) ||
-                !(set.reps?.isEmpty ?? true) ||
-                !(set.elapsedTime?.isEmpty ?? true) ||
-                !(set.distance?.isEmpty ?? true) ||
-                !(set.calories?.isEmpty ?? true) ||
-                !(set.custom?.isEmpty ?? true)
-            }
-        }
+        self.clearExistingRecords = clearExistingRecords
     }
 
     var body: some View {
@@ -46,28 +60,38 @@ struct ContentView: View {
                 .onTapGesture { hideKeyboard() }
                 .onChange(of: exerciseRecords) { oldRecords, newRecords in
                     UserDefaultsManager.saveExerciseRecords(newRecords)
-
-                    // Additional logic
-                    let isInputValid = newRecords.allSatisfy { record in
-                        !record.selectedExerciseType.isEmpty &&
-                        record.setRecords.allSatisfy { set in
-                            !(set.weight?.isEmpty ?? true) ||
-                            !(set.reps?.isEmpty ?? true) ||
-                            !(set.elapsedTime?.isEmpty ?? true) ||
-                            !(set.distance?.isEmpty ?? true) ||
-                            !(set.calories?.isEmpty ?? true) ||
-                            !(set.custom?.isEmpty ?? true)
-                        }
-                    }
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     toolbarItems()
                 }
                 .onAppear {
-                    exercises = UserDefaultsManager.loadOrCreateExercises()
-                    loadSavedWorkouts()
+                    if fromRoutine {
+                        // Load existing records and append the new one
+                        var currentRecords = UserDefaultsManager.loadExerciseRecords()
+                        if currentRecords.isEmpty || (currentRecords.count == 1 && currentRecords[0].selectedExerciseType.isEmpty) {
+                            currentRecords = exerciseRecords
+                        } else {
+                            // Only append if the exercise isn't already in the records
+                            let newExercise = exerciseRecords[0].selectedExerciseType
+                            if !currentRecords.contains(where: { $0.selectedExerciseType == newExercise }) {
+                                currentRecords.append(contentsOf: exerciseRecords)
+                            }
+                        }
+                        exerciseRecords = currentRecords
+                        UserDefaultsManager.saveExerciseRecords(currentRecords)
+                    }
+                    if clearExistingRecords {
+                        // Clear any saved records when coming from routine
+                        UserDefaultsManager.saveExerciseRecords(exerciseRecords)
+                    }
                 }
+            }
+        }
+        .onDisappear {
+            if !fromRoutine {
+                // Clear the saved records when leaving the main view (not from routine)
+                UserDefaultsManager.saveExerciseRecords([ExerciseRecord()])
             }
         }
     }
@@ -497,4 +521,32 @@ func formatTimestamp(_ date: Date) -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: date)
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        // Preview with sample data
+        ContentView(
+            exercises: [
+                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps]),
+                Exercise(name: "Squats", selectedMetrics: [.weight, .reps])
+            ],
+            exerciseRecords: [
+                ExerciseRecord(
+                    selectedExerciseType: "Bench Press",
+                    setRecords: [
+                        SetRecord(weight: "135", reps: "10"),
+                        SetRecord(weight: "155", reps: "8")
+                    ]
+                )
+            ]
+        )
+        .environment(\.theme, AppTheme())
+    }
+}
+
+extension Optional where Wrapped == String {
+    var isNilOrEmpty: Bool {
+        self?.isEmpty ?? true
+    }
 }

@@ -104,7 +104,28 @@ struct RoutineRow: View {
 
 struct RoutineListView_Previews: PreviewProvider {
     static var previews: some View {
-        RoutineListView()
-            .environment(\.theme, AppTheme()) // Preview with the theme applied
+        NavigationView {
+            RoutineListView()
+                .environment(\.theme, AppTheme())
+                .onAppear {
+                    // Add sample routine data for preview
+                    let sampleRoutines = [
+                        Routine(
+                            name: "Push Day",
+                            exercises: [
+                                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps]),
+                                Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps])
+                            ],
+                            items: [
+                                .header("Chest"),
+                                .exercise(Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps])),
+                                .header("Shoulders"),
+                                .exercise(Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps]))
+                            ]
+                        )
+                    ]
+                    UserDefaultsManager.saveRoutines(sampleRoutines)
+                }
+        }
     }
 }

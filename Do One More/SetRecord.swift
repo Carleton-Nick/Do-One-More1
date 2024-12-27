@@ -1,10 +1,11 @@
 import Foundation
 
-struct SetRecord: Codable, Hashable {
-    var weight: String?
-    var reps: String?
-    var elapsedTime: String?
-    var distance: String?
-    var calories: String?
-    var custom: String?
+struct SetRecord: Identifiable, Codable, Equatable, Hashable {
+    var id = UUID()
+    var weight: String? = nil
+    var reps: String? = nil
+    var elapsedTime: String? = nil
+    var distance: String? = nil
+    var calories: String? = nil
+    var custom: String? = nil
 }
