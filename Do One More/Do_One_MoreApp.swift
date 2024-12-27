@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct Do_One_MoreApp: App {
+    @StateObject private var quoteManager = QuoteManager()
     @StateObject private var routineImporter = RoutineImporter()
     
     init() {
@@ -43,6 +44,7 @@ struct Do_One_MoreApp: App {
                 exerciseRecords: [ExerciseRecord()]
             )
             .environment(\.theme, AppTheme())
+            .environmentObject(quoteManager)
             .environmentObject(routineImporter)
             .onOpenURL { url in
                 routineImporter.handleIncomingURL(url)

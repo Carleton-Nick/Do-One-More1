@@ -9,6 +9,7 @@ struct ContentView: View {
     var fromRoutine: Bool = false
     var clearExistingRecords: Bool = false
     @Environment(\.theme) var theme
+    @EnvironmentObject private var quoteManager: QuoteManager
 
     var hasValidInput: Bool {
         for record in exerciseRecords {
@@ -48,12 +49,17 @@ struct ContentView: View {
             ZStack {
                 theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 VStack {
-                    exerciseRecordsList() // List of Exercise Records
+                    VStack {
+                        exerciseRecordsList() // List of Exercise Records
+                    }
+                    
+                    Spacer() // This pushes everything below down
+                    
                     SaveAndAddButtons(
                         exerciseRecords: $exerciseRecords,
-                        hasValidInput: hasValidInput, // Pass the updated `hasValidInput`
+                        hasValidInput: hasValidInput,
                         saveWorkoutAction: saveWorkout,
-                        showAlert: $showAlert, // Bind the alert state
+                        showAlert: $showAlert,
                         theme: theme
                     )
                 }
@@ -66,6 +72,7 @@ struct ContentView: View {
                     toolbarItems()
                 }
                 .onAppear {
+                    quoteManager.showMotivationalQuote()
                     if fromRoutine {
                         // Load existing records and append the new one
                         var currentRecords = UserDefaultsManager.loadExerciseRecords()
@@ -98,17 +105,26 @@ struct ContentView: View {
     
     private func exerciseRecordsList() -> some View {
         ScrollView {
-            ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
-                ExerciseRecordView(
-                    exerciseRecord: $exerciseRecord,
-                    exercises: exercises,
-                    exerciseRecords: $exerciseRecords,
-                    index: index,
-                    theme: theme,
-                    createTextField: createTextField,
-                    findMostRecentWorkout: findMostRecentWorkout(for:)
-                )
+            VStack(spacing: 20) { // Add some spacing between records
+                ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
+                    ExerciseRecordView(
+                        exerciseRecord: $exerciseRecord,
+                        exercises: exercises,
+                        exerciseRecords: $exerciseRecords,
+                        index: index,
+                        theme: theme,
+                        createTextField: createTextField,
+                        findMostRecentWorkout: findMostRecentWorkout(for:)
+                    )
+                    .padding(.top, 10) // Add padding to the top of each exercise record
+                }
+                
+                if quoteManager.showQuote {
+                    MotivationalQuoteView(quote: quoteManager.currentQuote ?? "")
+                        .padding(.vertical)
+                }
             }
+            .padding(.bottom, 20) // Add some padding at the bottom of the scroll view
         }
     }
     
