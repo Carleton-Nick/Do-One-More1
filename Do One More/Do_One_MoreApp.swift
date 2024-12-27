@@ -32,23 +32,20 @@ struct Do_One_MoreApp: App {
         UIView.appearance().tintColor = .white
         
         // Load preloaded exercises if no exercises exist
-                if UserDefaultsManager.loadExercises().isEmpty {
-                    UserDefaultsManager.saveExercises(PreloadedExercises.exercises)
-                }
+        if UserDefaultsManager.loadExercises().isEmpty {
+            UserDefaultsManager.saveExercises(PreloadedExercises.exercises)
+        }
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(
-                exercises: UserDefaultsManager.loadExercises(),
-                exerciseRecords: [ExerciseRecord()]
-            )
-            .environment(\.theme, AppTheme())
-            .environmentObject(quoteManager)
-            .environmentObject(routineImporter)
-            .onOpenURL { url in
-                routineImporter.handleIncomingURL(url)
-            }
+            SplashScreenView()
+                .environment(\.theme, AppTheme())
+                .environmentObject(quoteManager)
+                .environmentObject(routineImporter)
+                .onOpenURL { url in
+                    routineImporter.handleIncomingURL(url)
+                }
         }
     }
 }
