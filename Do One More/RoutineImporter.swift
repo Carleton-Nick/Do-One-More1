@@ -22,12 +22,14 @@ class RoutineImporter: ObservableObject {
                 // Parse exercises
                 let exercises = (routineDict["exercises"] as? [[String: Any]])?.compactMap { exerciseDict -> Exercise? in
                     guard let name = exerciseDict["name"] as? String,
-                          let metricStrings = exerciseDict["selectedMetrics"] as? [String] else {
+                          let metricStrings = exerciseDict["selectedMetrics"] as? [String],
+                          let categoryString = exerciseDict["category"] as? String,
+                          let category = ExerciseCategory(rawValue: categoryString) else {
                         return nil
                     }
                     
                     let metrics = metricStrings.compactMap { ExerciseMetric(rawValue: $0) }
-                    return Exercise(name: name, selectedMetrics: metrics)
+                    return Exercise(name: name, selectedMetrics: metrics, category: category)
                 } ?? []
                 
                 // Parse items

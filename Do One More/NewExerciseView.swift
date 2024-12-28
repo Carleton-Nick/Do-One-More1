@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct NewExerciseView: View {
-    @Binding var exercises: [Exercise]
-    @Environment(\.presentationMode) var presentationMode
-    @State private var exerciseName: String = ""
-    @State private var selectedMetrics: Set<ExerciseMetric> = []
-    @State private var showAlert = false
+    @Environment(\.dismiss) var dismiss
     @Environment(\.theme) var theme
+    @Binding var exercises: [Exercise]
+    @State private var exerciseName = ""
+    @State private var selectedMetrics: Set<ExerciseMetric> = []
+    @State private var selectedCategory: ExerciseCategory = .arms  // Default category
+    @State private var showAlert = false
 
     var canSave: Bool {
         return !exerciseName.isEmpty && !selectedMetrics.isEmpty
@@ -20,12 +21,12 @@ struct NewExerciseView: View {
                 // Drag Handle
                 HStack {
                     Capsule()
-                        .fill(Color.gray.opacity(0.7)) // Grey color with some opacity
-                        .frame(width: 120, height: 5) // Handle size
-                        .padding(.top, 10) // Add padding to separate it from the top
-                        .padding(.bottom, 10) // Add padding below drag handle so it's not directly against the input field
+                        .fill(Color.gray.opacity(0.7))
+                        .frame(width: 120, height: 5)
+                        .padding(.top, 10)
+                        .padding(.bottom, 10)
                 }
-                .frame(maxWidth: .infinity) // Center the drag handle horizontally
+                .frame(maxWidth: .infinity)
 
                 // Input Field for Exercise Name with Placeholder
                 TextField("", text: $exerciseName)
@@ -45,6 +46,28 @@ struct NewExerciseView: View {
                     .autocapitalization(.words)
                     .textInputAutocapitalization(.words)
                     .padding(.bottom, 20)
+
+                // Category picker with orange border
+                HStack {
+                    Text("Category")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Picker("", selection: $selectedCategory) {
+                        ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
+                            Text(category.rawValue)
+                                .foregroundColor(.white)
+                                .tag(category)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .accentColor(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.primaryColor, lineWidth: 1)
+                    )
+                }
+                .padding(.vertical, 5)
 
                 Text("Select Metrics")
                     .font(theme.secondaryFont)
@@ -108,10 +131,14 @@ struct NewExerciseView: View {
             return
         }
 
-        let newExercise = Exercise(name: exerciseName, selectedMetrics: Array(selectedMetrics))
+        let newExercise = Exercise(
+            name: exerciseName,
+            selectedMetrics: Array(selectedMetrics),
+            category: selectedCategory
+        )
         exercises.append(newExercise)
         UserDefaultsManager.saveExercises(exercises)
-        presentationMode.wrappedValue.dismiss()
+        dismiss()
     }
 }
 

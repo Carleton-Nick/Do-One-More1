@@ -2,60 +2,77 @@ import SwiftUI
 
 struct RoutineListView: View {
     @State private var routines: [Routine] = []
-    @State private var exercises: [Exercise] = UserDefaultsManager.loadExercises() // Load exercises
-    @Environment(\.theme) var theme // Inject the global theme
+    @State private var exercises: [Exercise] = UserDefaultsManager.loadExercises()
+    @Environment(\.theme) var theme
+    @State private var showingCreateRoutineView = false
 
     var body: some View {
         NavigationView {
             ZStack {
-                theme.backgroundColor.edgesIgnoringSafeArea(.all) // Set the entire view's background
+                theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 
-                routineList // Use a separate view for the list content
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .principal) {
-                            UnderlinedTitle(title: "Workout Routines")
-                        }
-                        ToolbarItemGroup(placement: .bottomBar) {
-                            Spacer() // Align the "Add Routine" button to the right
-
-                            // "Add Routine" button with consistent styling
-                            NavigationLink(destination: CreateRoutineView(routines: $routines)) {
-                                Text("Create Routine")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(theme.buttonTextColor)
-                                    .padding(theme.buttonPadding)
-                                    .background(theme.buttonBackgroundColor)
-                                    .cornerRadius(theme.buttonCornerRadius)
+                VStack {
+                    if routines.isEmpty {
+                        Text("No routines yet")
+                            .foregroundColor(.white)
+                            .padding()
+                    } else {
+                        List {
+                            ForEach(routines) { routine in
+                                NavigationLink(destination: RoutineDetailView(routine: routine, exercises: exercises, routines: $routines)) {
+                                    Text(routine.name)
+                                        .foregroundColor(.white)
+                                }
+                                .listRowBackground(theme.backgroundColor)
                             }
+                            .onDelete(perform: deleteRoutine)
                         }
+                        .scrollContentBackground(.hidden)
                     }
-                    .onAppear(perform: loadRoutines)
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                
+                // Create New Routine Button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showingCreateRoutineView = true
+                        }) {
+                            Text("Create New Routine")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding()
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                        .padding()
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    UnderlinedTitle(title: "Routines")
+                }
             }
         }
-    }
-
-    // MARK: - Routine List View
-    private var routineList: some View {
-        List {
-            ForEach(routines.indices, id: \.self) { index in
-                RoutineRow(routine: routines[index], routines: $routines, exercises: exercises, index: index)
-                    .listRowBackground(theme.backgroundColor)
-            }
-            .onDelete(perform: deleteRoutine) // Swipe to delete
-            .onMove(perform: moveRoutine)     // Tap and hold to reorder
+        .sheet(isPresented: $showingCreateRoutineView) {
+            CreateRoutineView(routines: $routines)
         }
-        .scrollContentBackground(.hidden)
-        .listStyle(PlainListStyle())
+        .onAppear {
+            routines = UserDefaultsManager.loadRoutines()
+            if routines.isEmpty {
+                createSampleRoutines()
+            }
+        }
     }
 
     // MARK: - Routine Management Functions
 
     func loadRoutines() {
-        if let savedRoutines = UserDefaults.standard.data(forKey: "routines"),
-           let decodedRoutines = try? JSONDecoder().decode([Routine].self, from: savedRoutines) {
-            routines = decodedRoutines
-        }
+        routines = UserDefaultsManager.loadRoutines()
     }
 
     func moveRoutine(from source: IndexSet, to destination: Int) {
@@ -65,13 +82,31 @@ struct RoutineListView: View {
 
     func deleteRoutine(at offsets: IndexSet) {
         routines.remove(atOffsets: offsets)
-        saveRoutines()
+        UserDefaultsManager.saveRoutines(routines)
     }
 
     func saveRoutines() {
-        if let encoded = try? JSONEncoder().encode(routines) {
-            UserDefaults.standard.set(encoded, forKey: "routines")
-        }
+        UserDefaultsManager.saveRoutines(routines)
+    }
+
+    func createSampleRoutines() {
+        let sampleRoutines = [
+            Routine(
+                name: "Push Day",
+                exercises: [
+                    Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
+                    Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps], category: .chest)
+                ],
+                items: [
+                    .header("Chest"),
+                    .exercise(Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest)),
+                    .header("Shoulders"),
+                    .exercise(Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps], category: .chest))
+                ]
+            )
+        ]
+        routines = sampleRoutines
+        UserDefaultsManager.saveRoutines(routines)
     }
 }
 
@@ -113,14 +148,14 @@ struct RoutineListView_Previews: PreviewProvider {
                         Routine(
                             name: "Push Day",
                             exercises: [
-                                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps]),
-                                Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps])
+                                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
+                                Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps], category: .chest)
                             ],
                             items: [
                                 .header("Chest"),
-                                .exercise(Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps])),
+                                .exercise(Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest)),
                                 .header("Shoulders"),
-                                .exercise(Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps]))
+                                .exercise(Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps], category: .chest))
                             ]
                         )
                     ]

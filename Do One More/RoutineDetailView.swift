@@ -113,7 +113,8 @@ struct RoutineDetailView: View {
             "exercises": routine.exercises.map { exercise in
                 [
                     "name": exercise.name,
-                    "selectedMetrics": exercise.selectedMetrics.map { $0.rawValue }
+                    "selectedMetrics": exercise.selectedMetrics.map { $0.rawValue },
+                    "category": exercise.category.rawValue
                 ]
             },
             "items": routine.items.map { item in
@@ -145,13 +146,13 @@ struct RoutineDetailView_Previews: PreviewProvider {
         RoutineDetailView(
             routine: Routine(
                 name: "Sample Routine",
-                exercises: [Exercise(name: "Bench Press", selectedMetrics: [])],
+                exercises: [Exercise(name: "Bench Press", selectedMetrics: [], category: .chest)],
                 items: [
                     .header("Warm-up"),
-                    .exercise(Exercise(name: "Bench Press", selectedMetrics: []))
+                    .exercise(Exercise(name: "Bench Press", selectedMetrics: [], category: .chest))
                 ]
             ),
-            exercises: [Exercise(name: "Bench Press", selectedMetrics: [])],
+            exercises: [Exercise(name: "Bench Press", selectedMetrics: [], category: .chest)],
             routines: .constant([])
         )
         .environment(\.theme, AppTheme())

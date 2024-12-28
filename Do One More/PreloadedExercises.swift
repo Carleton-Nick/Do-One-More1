@@ -2,69 +2,48 @@ import Foundation
 
 struct PreloadedExercises {
     static let exercises: [Exercise] = [
-        // MARK: - Chest Exercises
-        Exercise(name: "Push-Ups", selectedMetrics: [.reps]),
-        Exercise(name: "Bench Press - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Incline Press - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Incline Press - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Flat Dumbbell Fly", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Cable Crossovers", selectedMetrics: [.weight, .reps]),
-
-        // MARK: - Back Exercises
-        Exercise(name: "Deadlift - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Romanian Deadlift - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Pull-Ups", selectedMetrics: [.reps]),
-        Exercise(name: "Chin-Ups", selectedMetrics: [.reps]),
-        Exercise(name: "Seated Cable Row", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "T-Bar Row - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "One-Arm Row - Dumbbell", selectedMetrics: [.weight, .reps]),
-
-        // MARK: - Shoulder Exercises
-        Exercise(name: "Overhead Press - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Arnold Press - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Front Raises - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Lateral Raises - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Face Pulls", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Clean & Press - Barbell", selectedMetrics: [.weight, .reps]),
-
-        // MARK: - Leg Exercises
-        Exercise(name: "Squats - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Front Squats - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Lunges - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Leg Press", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Leg Curls - Machine", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Calf Raises - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Step-Ups - Dumbbell", selectedMetrics: [.weight, .reps]),
-
-        // MARK: - Arm Exercises
-        Exercise(name: "Bicep Curls - Barbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Hammer Curls - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Concentration Curls - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Tricep Pushdowns", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Overhead Tricep Extension - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Skull Crushers - Barbell", selectedMetrics: [.weight, .reps]),
-
-        // MARK: - Core Exercises
-        Exercise(name: "Plank", selectedMetrics: [.time]),
-        Exercise(name: "Hanging Leg Raises", selectedMetrics: [.reps]),
-        Exercise(name: "Russian Twists - Dumbbell", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Cable Woodchoppers", selectedMetrics: [.weight, .reps]),
-        Exercise(name: "Ab Wheel Rollouts", selectedMetrics: [.reps]),
-
-        // MARK: - Cardio Exercises
-        Exercise(name: "Assault Bike", selectedMetrics: [.time, .calories]),
-        Exercise(name: "Indoor Run", selectedMetrics: [.time, .distance]),
-        Exercise(name: "Outdoor Run", selectedMetrics: [.time, .distance]),
-        Exercise(name: "Treadmill Walk", selectedMetrics: [.time, .distance]),
-        Exercise(name: "Outdoor Cycle", selectedMetrics: [.time, .distance]),
-        Exercise(name: "Stationary Bike", selectedMetrics: [.time, .distance]),
-        Exercise(name: "Rowing Machine", selectedMetrics: [.time, .distance]),
-
-        // MARK: - Calisthenics
-        Exercise(name: "Burpees", selectedMetrics: [.reps]),
-        Exercise(name: "Mountain Climbers", selectedMetrics: [.time]),
-        Exercise(name: "Jumping Jacks", selectedMetrics: [.reps]),
-        Exercise(name: "Dips", selectedMetrics: [.reps]),
-        Exercise(name: "Box Jumps", selectedMetrics: [.reps])
+        // Chest Exercises
+        Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
+        Exercise(name: "Incline Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
+        Exercise(name: "Decline Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
+        Exercise(name: "Dumbbell Press", selectedMetrics: [.weight, .reps], category: .chest),
+        Exercise(name: "Push-Ups", selectedMetrics: [.reps], category: .chest),
+        
+        // Back Exercises
+        Exercise(name: "Deadlift", selectedMetrics: [.weight, .reps], category: .back),
+        Exercise(name: "Barbell Row", selectedMetrics: [.weight, .reps], category: .back),
+        Exercise(name: "Pull-Ups", selectedMetrics: [.reps], category: .back),
+        Exercise(name: "Lat Pulldown", selectedMetrics: [.weight, .reps], category: .back),
+        
+        // Leg Exercises
+        Exercise(name: "Squats", selectedMetrics: [.weight, .reps], category: .legs),
+        Exercise(name: "Leg Press", selectedMetrics: [.weight, .reps], category: .legs),
+        Exercise(name: "Lunges", selectedMetrics: [.weight, .reps], category: .legs),
+        Exercise(name: "Calf Raises", selectedMetrics: [.weight, .reps], category: .legs),
+        Exercise(name: "Leg Extensions", selectedMetrics: [.weight, .reps], category: .legs),
+        
+        // Arm Exercises
+        Exercise(name: "Bicep Curls", selectedMetrics: [.weight, .reps], category: .arms),
+        Exercise(name: "Tricep Extensions", selectedMetrics: [.weight, .reps], category: .arms),
+        Exercise(name: "Hammer Curls", selectedMetrics: [.weight, .reps], category: .arms),
+        Exercise(name: "Skull Crushers", selectedMetrics: [.weight, .reps], category: .arms),
+        
+        // Cardio Exercises
+        Exercise(name: "Running", selectedMetrics: [.distance, .time, .calories], category: .cardio),
+        Exercise(name: "Cycling", selectedMetrics: [.distance, .time, .calories], category: .cardio),
+        Exercise(name: "Swimming", selectedMetrics: [.distance, .time, .calories], category: .cardio),
+        Exercise(name: "Jump Rope", selectedMetrics: [.time, .calories], category: .cardio),
+        
+        // HIIT Exercises
+        Exercise(name: "Burpees", selectedMetrics: [.reps, .time], category: .hiit),
+        Exercise(name: "Mountain Climbers", selectedMetrics: [.reps, .time], category: .hiit),
+        Exercise(name: "Box Jumps", selectedMetrics: [.reps, .time], category: .hiit),
+        Exercise(name: "Kettlebell Swings", selectedMetrics: [.weight, .reps], category: .hiit),
+        
+        // Crossfit Exercises
+        Exercise(name: "Clean and Jerk", selectedMetrics: [.weight, .reps], category: .crossfit),
+        Exercise(name: "Snatch", selectedMetrics: [.weight, .reps], category: .crossfit),
+        Exercise(name: "Thrusters", selectedMetrics: [.weight, .reps], category: .crossfit),
+        Exercise(name: "Wall Balls", selectedMetrics: [.weight, .reps], category: .crossfit)
     ]
 }

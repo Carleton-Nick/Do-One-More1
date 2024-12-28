@@ -1,25 +1,32 @@
 import Foundation
 
-struct Exercise: Codable, Hashable, Identifiable {
-    var id = UUID() // Unique ID for each exercise
-    var name: String // Name of the exercise
-    var selectedMetrics: [ExerciseMetric] // Metrics related to the exercise
-    var creationDate: Date = Date() // Creation date, with a default of current date
-
-    // Equatable conformance (this is automatically synthesized by the compiler now, so you don't need to manually implement it)
-    static func == (lhs: Exercise, rhs: Exercise) -> Bool {
-        return lhs.id == rhs.id &&
-               lhs.name == rhs.name &&
-               lhs.selectedMetrics == rhs.selectedMetrics &&
-               lhs.creationDate == rhs.creationDate
+struct Exercise: Codable, Identifiable, Equatable, Hashable {
+    var id = UUID()
+    var name: String
+    var selectedMetrics: [ExerciseMetric]
+    var category: ExerciseCategory
+    
+    init(name: String, selectedMetrics: [ExerciseMetric], category: ExerciseCategory) {
+        self.name = name
+        self.selectedMetrics = selectedMetrics
+        self.category = category
     }
-
-    // Hashable conformance (automatic in most cases, but this custom implementation works)
+    
+    // Add Hashable conformance
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(name)
         hasher.combine(selectedMetrics)
-        hasher.combine(creationDate)
+        hasher.combine(category)
+    }
+    
+    // We already have Equatable conformance through the compiler synthesis,
+    // but we can make it explicit if needed:
+    static func == (lhs: Exercise, rhs: Exercise) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.name == rhs.name &&
+        lhs.selectedMetrics == rhs.selectedMetrics &&
+        lhs.category == rhs.category
     }
 }
 

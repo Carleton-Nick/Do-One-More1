@@ -6,6 +6,7 @@ struct EditExerciseView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var exerciseName: String
     @State private var selectedMetrics: Set<ExerciseMetric>
+    @State private var selectedCategory: ExerciseCategory
     @State private var showAlert = false
     @Environment(\.theme) var theme
 
@@ -14,6 +15,7 @@ struct EditExerciseView: View {
         self._exercises = exercises
         self._exerciseName = State(initialValue: exercise.wrappedValue.name)
         self._selectedMetrics = State(initialValue: Set(exercise.wrappedValue.selectedMetrics))
+        self._selectedCategory = State(initialValue: exercise.wrappedValue.category)
     }
 
     var canSave: Bool {
@@ -53,6 +55,28 @@ struct EditExerciseView: View {
                     .autocapitalization(.words)
                     .textInputAutocapitalization(.words)
                     .padding(.bottom, 20)
+
+                // Category picker with orange border
+                HStack {
+                    Text("Category")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Picker("", selection: $selectedCategory) {
+                        ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
+                            Text(category.rawValue)
+                                .foregroundColor(.white)
+                                .tag(category)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .accentColor(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.primaryColor, lineWidth: 1)
+                    )
+                }
+                .padding(.vertical, 5)
 
                 Text("Edit Metrics")
                     .font(theme.secondaryFont)
@@ -118,18 +142,26 @@ struct EditExerciseView: View {
 
         // Update the existing exercise with the new data
         if let index = exercises.firstIndex(where: { $0.id == exercise.id }) {
-            exercises[index] = Exercise(id: exercise.id, name: exerciseName, selectedMetrics: Array(selectedMetrics))
+            exercises[index] = Exercise(
+                name: exerciseName,
+                selectedMetrics: Array(selectedMetrics),
+                category: selectedCategory
+            )
             UserDefaultsManager.saveExercises(exercises)
         }
 
-        presentationMode.wrappedValue.dismiss() // Dismiss the current view
+        presentationMode.wrappedValue.dismiss()
     }
 }
 
 struct EditExerciseView_Previews: PreviewProvider {
     static var previews: some View {
         EditExerciseView(
-            exercise: .constant(Exercise(name: "Squat", selectedMetrics: [.weight, .reps])),
+            exercise: .constant(Exercise(
+                name: "Squat",
+                selectedMetrics: [.weight, .reps],
+                category: .legs
+            )),
             exercises: .constant([])
         )
         .environment(\.theme, AppTheme())

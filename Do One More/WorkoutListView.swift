@@ -141,17 +141,12 @@ struct WorkoutListView: View {
     }
 
     func loadWorkouts() {
-        if let savedWorkouts = UserDefaults.standard.data(forKey: "workouts"),
-           let decodedWorkouts = try? JSONDecoder().decode([Workout].self, from: savedWorkouts) {
-            // Reverse the order of the workouts to display the most recent first
-            workouts = decodedWorkouts.reversed()
-        }
+        workouts = UserDefaultsManager.loadWorkouts().reversed()
     }
     
     func saveWorkouts() {
-        if let encoded = try? JSONEncoder().encode(workouts) {
-            UserDefaults.standard.set(encoded, forKey: "workouts")
-        }
+        // Save the workouts in their current (reversed) order
+        UserDefaultsManager.saveWorkouts(workouts.reversed())
     }
 
     // Helper function to format the timestamp as "yyyy-MM-dd"

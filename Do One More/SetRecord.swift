@@ -9,3 +9,14 @@ struct SetRecord: Identifiable, Codable, Equatable, Hashable {
     var calories: String? = nil
     var custom: String? = nil
 }
+
+extension SetRecord {
+    var isEmpty: Bool {
+        weight.isNilOrEmpty &&
+        reps.isNilOrEmpty &&
+        elapsedTime.isNilOrEmpty &&
+        distance.isNilOrEmpty &&
+        calories.isNilOrEmpty &&
+        custom.isNilOrEmpty
+    }
+}

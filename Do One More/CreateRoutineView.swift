@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 struct CreateRoutineView: View {
@@ -12,27 +11,23 @@ struct CreateRoutineView: View {
     @State private var editingHeaderIndex: Int?
     @State var exercises: [Exercise] = UserDefaultsManager.loadExercises()
     @State private var flashItem: UUID? = nil
-    @State private var editMode: EditMode = .inactive // Manage edit mode
-
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
 
-    var hasValidInput: Bool {
-        !routineName.isEmpty
-    }
-
     var body: some View {
-        ZStack {
-            theme.backgroundColor.edgesIgnoringSafeArea(.all)
-
-            VStack(alignment: .leading) {
-                // Section: Routine Name
-                VStack(alignment: .leading, spacing: 10) {
+        NavigationView {
+            ZStack {
+                theme.backgroundColor.edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 0) {
+                    dragHandle
                     
+                    // Name TextField
                     TextField("", text: $routineName)
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
                         .padding()
+                        .background(Color.black)
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
@@ -40,215 +35,263 @@ struct CreateRoutineView: View {
                         )
                         .customPlaceholder(
                             show: routineName.isEmpty,
-                            placeholder: "New Routine Name",
-                            placeholderColor: .gray // Use contrasting color
+                            placeholder: "Enter Routine Name",
+                            placeholderColor: .gray
                         )
-                        .autocapitalization(.words)
-                        .textInputAutocapitalization(.words)
-                        .padding(.horizontal)
-                }
-
-                // All Exercises Section
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Choose exercises for your routine")
-                        .font(theme.secondaryFont)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.bottom, 5)
-                        .overlay(
-                            Rectangle()
-                                .frame(height: 2)
-                                .foregroundColor(theme.primaryColor)
-                                .offset(y: 10),
-                            alignment: .bottomLeading
-                        )
-
-                    // List of All Exercises
-                    List(exercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
-                        MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
-                            selectedItems.append(.exercise(exercise))
-
-                            // Set flash state to this exercise, and clear after delay
-                            flashItem = exercise.id
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                flashItem = nil
+                        .padding()
+                    
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            // Available Exercises Section
+                            availableExercisesSection
+                            
+                            // Buttons
+                            HStack(spacing: 20) {
+                                Button(action: {
+                                    showingNewExerciseView = true
+                                }) {
+                                    Text("Create New Exercise")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(theme.buttonTextColor)
+                                        .padding(theme.buttonPadding)
+                                        .background(theme.buttonBackgroundColor)
+                                        .cornerRadius(theme.buttonCornerRadius)
+                                }
+                                
+                                Button(action: {
+                                    showingHeaderAlert = true
+                                }) {
+                                    Text("Add Header")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(theme.buttonTextColor)
+                                        .padding(theme.buttonPadding)
+                                        .background(theme.buttonBackgroundColor)
+                                        .cornerRadius(theme.buttonCornerRadius)
+                                }
                             }
-                        }
-                        .listRowBackground(Color.clear)
-                    }
-                    .scrollContentBackground(.hidden)
-                    .background(theme.backgroundColor)
-                    .listStyle(InsetListStyle())
-                    .frame(maxWidth: .infinity)
-
-                    // Centered Buttons
-                    HStack {
-                        Button(action: {
-                            showingNewExerciseView = true
-                        }) {
-                            Text("Create New Exercise")
-                                .font(theme.secondaryFont)
-                                .foregroundColor(theme.buttonTextColor)
-                                .padding(theme.buttonPadding)
-                                .background(theme.buttonBackgroundColor)
-                                .cornerRadius(theme.buttonCornerRadius)
-                        }
-                        .sheet(isPresented: $showingNewExerciseView) {
-                            NewExerciseView(exercises: $exercises)
-                                .onDisappear {
-                                    UserDefaultsManager.saveExercises(exercises)
-                                    if let lastCreatedExercise = exercises.last {
-                                        selectedItems.append(.exercise(lastCreatedExercise))
+                            .padding(.vertical)
+                            
+                            // Selected Items Section
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text("Selected Items")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .overlay(
+                                        Rectangle()
+                                            .frame(height: 2)
+                                            .foregroundColor(theme.primaryColor)
+                                            .offset(y: 10),
+                                        alignment: .bottom
+                                    )
+                                    .padding(.bottom, 10)
+                                    .background(theme.backgroundColor)
+                                
+                                ForEach(Array(selectedItems.enumerated()), id: \.element.id) { index, item in
+                                    switch item {
+                                    case .exercise(let exercise):
+                                        HStack {
+                                            Text(exercise.name)
+                                                .foregroundColor(.white)
+                                                .padding(.leading, 10)
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 12)
+                                        .background(theme.primaryColor)
+                                        .cornerRadius(8)
+                                        .padding(.horizontal)
+                                        .padding(.vertical, 4)
+                                        
+                                    case .header(let name):
+                                        HStack {
+                                            Spacer()
+                                            Text(name)
+                                                .foregroundColor(.white)
+                                                .padding(.vertical, 12)
+                                            Spacer()
+                                            Button(action: {
+                                                editingHeaderIndex = index
+                                                headerName = name
+                                                showingHeaderAlert = true
+                                            }) {
+                                                Image(systemName: "pencil")
+                                                    .foregroundColor(.gray)
+                                            }
+                                            .padding(.trailing, 10)
+                                        }
+                                        .overlay(
+                                            Rectangle()
+                                                .frame(height: 1)
+                                                .foregroundColor(theme.primaryColor)
+                                                .offset(y: 12),
+                                            alignment: .bottom
+                                        )
+                                        .padding(.horizontal)
                                     }
                                 }
-                        }
-
-                        Button(action: {
-                            showingHeaderAlert = true
-                        }) {
-                            Text("Add Header")
-                                .font(theme.secondaryFont)
-                                .foregroundColor(theme.buttonTextColor)
-                                .padding(theme.buttonPadding)
-                                .background(theme.buttonBackgroundColor)
-                                .cornerRadius(theme.buttonCornerRadius)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-
-                // Section: Selected Items
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Your Routine")
-                        .font(theme.secondaryFont)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.bottom, 5)
-                        .overlay(
-                            Rectangle()
-                                .frame(height: 2)
-                                .foregroundColor(theme.primaryColor)
-                                .offset(y: 10),
-                            alignment: .bottomLeading
-                        )
-
-                    List {
-                        ForEach(Array(selectedItems.enumerated()), id: \.element.id) { index, item in
-                            switch item {
-                            case .exercise(let exercise):
-                                HStack {
-                                    Text(exercise.name)
-                                        .foregroundColor(.white)
-                                        .padding(.leading, 10)
-
-                                    Spacer()
-                                }
-                                .padding(.vertical, 12)
-                                .background(theme.primaryColor)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .listRowInsets(EdgeInsets())
-
-                            case .header(let name):
-                                HStack {
-                                    Spacer() // Add a spacer before the text to help center it
-                                    // Add dashes to either side of the header name
-                                        Text("- \(name) -")
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 10) // Adjust the padding to be horizontal for better balance
-                                    Spacer() // Add another spacer after the text to keep it centered
-
-                                    // Hidden pencil button, but still functional
-                                    Button(action: {
-                                        editingHeaderIndex = index
-                                        headerName = name
-                                        showingHeaderAlert = true
-                                    }) {
-                                        Image(systemName: "pencil")
-                                            .foregroundColor(.gray) // Make the pencil invisible with black color
-                                    }
-                                    .padding(.trailing, 10) // Keep the trailing padding for consistent spacing
-                                }
-                                .padding(.vertical, 12)
-                                .background(Color.gray)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .listRowInsets(EdgeInsets())
                             }
+                            .background(theme.backgroundColor)
+                            
+                            // Save Button
+                            Button(action: saveRoutine) {
+                                Text("Save Routine")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(!routineName.isEmpty ? theme.buttonTextColor : theme.secondaryColor)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(!routineName.isEmpty ? theme.buttonBackgroundColor : Color.gray)
+                                    .cornerRadius(theme.buttonCornerRadius)
+                            }
+                            .disabled(routineName.isEmpty)
+                            .padding()
                         }
-                        .onDelete(perform: deleteItem)
-                        .onMove(perform: moveItem)
-                        .listRowBackground(Color.clear)
+                        .background(theme.backgroundColor)
                     }
-                    .scrollContentBackground(.hidden)
                     .background(theme.backgroundColor)
-                    .listStyle(InsetListStyle())
-                    .environment(\.editMode, $editMode) // Apply edit mode to the list
                 }
-
-                Button(action: saveRoutine) {
-                    Text("Save Routine")
-                        .font(theme.secondaryFont)
-                        .foregroundColor(hasValidInput ? theme.buttonTextColor : theme.secondaryColor)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .disabled(!hasValidInput)
-                .alert(isPresented: $showAlert) {
-                    Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")) {
-                        dismiss()
-                    })
-                }
-                .padding(.top, 10)
-                .padding(.horizontal)
             }
-            .padding(.top)
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                UnderlinedTitle(title: "Create A Routine")
+            .background(theme.backgroundColor)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    UnderlinedTitle(title: "Create A Routine")
+                }
             }
         }
-        .onAppear {
-            exercises = UserDefaultsManager.loadExercises()
+        .sheet(isPresented: $showingNewExerciseView) {
+            NewExerciseView(exercises: $exercises)
+                .onDisappear {
+                    UserDefaultsManager.saveExercises(exercises)
+                    if let lastCreatedExercise = exercises.last {
+                        selectedItems.append(.exercise(lastCreatedExercise))
+                    }
+                }
         }
-        .alert("Name your header", isPresented: $showingHeaderAlert, actions: {
+        .alert("Name your header", isPresented: $showingHeaderAlert) {
             TextField("Header", text: $headerName)
-            Button("OK", action: {
+            Button("OK") {
                 if let index = editingHeaderIndex {
                     selectedItems[index] = .header(headerName)
+                    editingHeaderIndex = nil
                 } else {
                     selectedItems.append(.header(headerName))
                 }
+            }
+            Button("Cancel", role: .cancel) {
                 editingHeaderIndex = nil
-            })
-            Button("Cancel", role: .cancel, action: {
-                editingHeaderIndex = nil
-            })
-        })
+            }
+        }
+        .alert("Routine Saved", isPresented: $showAlert) {
+            Button("OK") {
+                dismiss()
+            }
+        }
+        .background(theme.backgroundColor)
     }
 
-    func moveItem(from source: IndexSet, to destination: Int) {
-        selectedItems.move(fromOffsets: source, toOffset: destination)
+    // Helper Views
+    private var dragHandle: some View {
+        HStack {
+            Capsule()
+                .fill(Color.gray.opacity(0.7))
+                .frame(width: 40, height: 5)
+                .padding(.top, 10)
+                .padding(.bottom, 10)
+        }
+        .frame(maxWidth: .infinity)
+        .background(theme.backgroundColor)
     }
 
-    func deleteItem(at offsets: IndexSet) {
-        selectedItems.remove(atOffsets: offsets)
+    private var availableExercisesSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Available Exercises")
+                .font(theme.secondaryFont)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .overlay(
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundColor(theme.primaryColor)
+                        .offset(y: 10),
+                    alignment: .bottom
+                )
+                .padding(.bottom, 10)
+                .background(theme.backgroundColor)
+            
+            exercisesList
+        }
+        .background(theme.backgroundColor)
+    }
+
+    private var exercisesList: some View {
+        ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
+            let categoryExercises = exercises.filter { $0.category == category }
+            if !categoryExercises.isEmpty {
+                categoryHeader(category)
+                exercisesForCategory(categoryExercises)
+            }
+        }
+    }
+
+    private func categoryHeader(_ category: ExerciseCategory) -> some View {
+        Text(category.rawValue)
+            .font(theme.secondaryFont)
+            .foregroundColor(.white)
+            .padding(.horizontal)
+            .padding(.top, 10)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(theme.primaryColor)
+                    .offset(y: 5),
+                alignment: .bottom
+            )
+            .background(theme.backgroundColor)
+    }
+
+    private func exercisesForCategory(_ exercises: [Exercise]) -> some View {
+        ForEach(exercises.sorted(by: { $0.name < $1.name })) { exercise in
+            MultipleSelectionRow(
+                title: exercise.name,
+                isSelected: selectedItems.contains(where: {
+                    if case .exercise(let selectedExercise) = $0 {
+                        return selectedExercise.id == exercise.id
+                    }
+                    return false
+                }),
+                isFlashing: flashItem == exercise.id
+            ) {
+                if let index = selectedItems.firstIndex(where: {
+                    if case .exercise(let selectedExercise) = $0 {
+                        return selectedExercise.id == exercise.id
+                    }
+                    return false
+                }) {
+                    selectedItems.remove(at: index)
+                } else {
+                    selectedItems.append(.exercise(exercise))
+                    flashItem = exercise.id
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        flashItem = nil
+                    }
+                }
+            }
+            .background(theme.backgroundColor)
+        }
     }
 
     func saveRoutine() {
         guard !routineName.isEmpty else { return }
-
-        // Extract exercises from the selectedItems array
+        
         let exercisesOnly = selectedItems.compactMap { item -> Exercise? in
             if case .exercise(let exercise) = item {
                 return exercise
             }
             return nil
         }
-
-        // Create a new Routine with both exercises and items
+        
         let newRoutine = Routine(name: routineName, exercises: exercisesOnly, items: selectedItems)
         routines.append(newRoutine)
         UserDefaultsManager.saveRoutines(routines)
@@ -258,7 +301,17 @@ struct CreateRoutineView: View {
 
 struct CreateRoutineView_Previews: PreviewProvider {
     static var previews: some View {
-        CreateRoutineView(routines: .constant([]))
-            .environment(\.theme, AppTheme())
+        EditRoutineView(
+            routine: Routine(
+                name: "Sample Routine",
+                exercises: [Exercise(name: "Bench Press", selectedMetrics: [], category: .chest)],
+                items: [
+                    .header("Warm-up"),
+                    .exercise(Exercise(name: "Bench Press", selectedMetrics: [], category: .chest))
+                ]
+            ),
+            routines: .constant([])
+        )
+        .environment(\.theme, AppTheme())
     }
 }

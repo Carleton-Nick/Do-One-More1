@@ -20,6 +20,8 @@
 		E57DD63A2D1EDF90002E5EA5 /* MotivationalQuoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD6392D1EDF90002E5EA5 /* MotivationalQuoteView.swift */; };
 		E57DD63C2D1EE4A8002E5EA5 /* QuoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD63B2D1EE4A8002E5EA5 /* QuoteManager.swift */; };
 		E57DD63E2D1EE9F7002E5EA5 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD63D2D1EE9F7002E5EA5 /* SplashScreenView.swift */; };
+		E57DD6402D1F3CCF002E5EA5 /* ExerciseCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD63F2D1F3CCF002E5EA5 /* ExerciseCategory.swift */; };
+		E57DD6422D1F415B002E5EA5 /* ExerciseRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD6412D1F415B002E5EA5 /* ExerciseRow.swift */; };
 		E585C7682C6EA71900FF46FE /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E585C7672C6EA71900FF46FE /* AppTheme.swift */; };
 		E585C76A2C6EA76200FF46FE /* CustomButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E585C7692C6EA76200FF46FE /* CustomButtonStyle.swift */; };
 		E599648A2C2CD7F200168FA6 /* Do_One_MoreApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59964892C2CD7F200168FA6 /* Do_One_MoreApp.swift */; };
@@ -58,6 +60,8 @@
 		E57DD6392D1EDF90002E5EA5 /* MotivationalQuoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotivationalQuoteView.swift; sourceTree = "<group>"; };
 		E57DD63B2D1EE4A8002E5EA5 /* QuoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteManager.swift; sourceTree = "<group>"; };
 		E57DD63D2D1EE9F7002E5EA5 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
+		E57DD63F2D1F3CCF002E5EA5 /* ExerciseCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseCategory.swift; sourceTree = "<group>"; };
+		E57DD6412D1F415B002E5EA5 /* ExerciseRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseRow.swift; sourceTree = "<group>"; };
 		E585C7672C6EA71900FF46FE /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		E585C7692C6EA76200FF46FE /* CustomButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomButtonStyle.swift; sourceTree = "<group>"; };
 		E59964862C2CD7F200168FA6 /* Do One More.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Do One More.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -126,9 +130,11 @@
 				E59964892C2CD7F200168FA6 /* Do_One_MoreApp.swift */,
 				E5E90D9C2C8A991100884EAE /* EditExerciseView.swift */,
 				E59964A42C2CD91200168FA6 /* EditRoutineView.swift */,
+				E57DD63F2D1F3CCF002E5EA5 /* ExerciseCategory.swift */,
 				E5E90D942C8A97A100884EAE /* Exercise.swift */,
 				E575F9FF2CDD9C4F00DFCA88 /* ExerciseRecord.swift */,
 				E5E90D962C8A984100884EAE /* ExerciseListView.swift */,
+				E57DD6412D1F415B002E5EA5 /* ExerciseRow.swift */,
 				E59964A82C2CD9CC00168FA6 /* MultipleSelectionRow.swift */,
 				E5E90D9A2C8A98BD00884EAE /* NewExerciseView.swift */,
 				E59964922C2CD7F300168FA6 /* Persistence.swift */,
@@ -230,6 +236,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E59964932C2CD7F300168FA6 /* Persistence.swift in Sources */,
+				E57DD6402D1F3CCF002E5EA5 /* ExerciseCategory.swift in Sources */,
 				E599648C2C2CD7F200168FA6 /* ContentView.swift in Sources */,
 				E59964AB2C2CD9E900168FA6 /* WorkoutListView.swift in Sources */,
 				E5375E962C74FBB70056F69D /* CustomSectionHeaderStyle.swift in Sources */,
@@ -238,6 +245,7 @@
 				E599649F2C2CD88500168FA6 /* Routine.swift in Sources */,
 				E570D84D2C6E93EE00652705 /* SetRecord.swift in Sources */,
 				E59964A92C2CD9CC00168FA6 /* MultipleSelectionRow.swift in Sources */,
+				E57DD6422D1F415B002E5EA5 /* ExerciseRow.swift in Sources */,
 				E5E90D9B2C8A98BD00884EAE /* NewExerciseView.swift in Sources */,
 				E59964962C2CD7F300168FA6 /* Do_One_More.xcdatamodeld in Sources */,
 				E575FA002CDD9C4F00DFCA88 /* ExerciseRecord.swift in Sources */,

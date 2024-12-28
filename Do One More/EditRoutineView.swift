@@ -74,22 +74,43 @@ struct EditRoutineView: View {
                         )
                     
                     // List of All Exercises with black background and custom styling
-                    List(exercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
-                        MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
-                            selectedItems.append(.exercise(exercise))
-                            
-                            // Flash effect
-                            flashItem = exercise.id
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                flashItem = nil
+                    List {
+                        ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
+                            let categoryExercises = exercises.filter { $0.category == category }
+                            if !categoryExercises.isEmpty {
+                                // Category header with underline
+                                Text(category.rawValue)
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal)
+                                    .padding(.top, 10)
+                                    .overlay(
+                                        Rectangle()
+                                            .frame(height: 1)
+                                            .foregroundColor(theme.primaryColor)
+                                            .offset(y: 5),
+                                        alignment: .bottom
+                                    )
+                                    .background(theme.backgroundColor) // Add black background
+
+                                ForEach(categoryExercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
+                                    MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
+                                        selectedItems.append(.exercise(exercise))
+                                        flashItem = exercise.id
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            flashItem = nil
+                                        }
+                                    }
+                                    .listRowBackground(Color.clear)
+                                }
                             }
                         }
-                        .listRowBackground(Color.clear)
+                        .listStyle(PlainListStyle()) // Add plain list style
+                        .scrollContentBackground(.hidden) // Hide the scroll background
+                        .background(theme.backgroundColor)
+                        .listStyle(InsetListStyle())
+                        .frame(maxWidth: .infinity)
                     }
-                    .scrollContentBackground(.hidden)
-                    .background(theme.backgroundColor)
-                    .listStyle(InsetListStyle())
-                    .frame(maxWidth: .infinity)
                     
                     // Centered "Create New Exercise" and "Add Header" Buttons
                     HStack {
@@ -272,8 +293,11 @@ struct EditRoutineView_Previews: PreviewProvider {
         EditRoutineView(
             routine: Routine(
                 name: "Sample Routine",
-                exercises: [Exercise(name: "Bench Press", selectedMetrics: [])],
-                items: [.header("Warm-up"), .exercise(Exercise(name: "Bench Press", selectedMetrics: []))]
+                exercises: [Exercise(name: "Bench Press", selectedMetrics: [], category: .chest)],
+                items: [
+                    .header("Warm-up"), 
+                    .exercise(Exercise(name: "Bench Press", selectedMetrics: [], category: .chest))
+                ]
             ),
             routines: .constant([])
         )

@@ -433,39 +433,14 @@ struct MenuView: View {
     // MARK: - Workout Management Functions
     
     func saveWorkout() {
-        guard hasValidInput else {
-            showAlert = true
-            return
-        }
+        let workout = createWorkout()
+        var existingWorkouts = UserDefaultsManager.loadWorkouts()
+        existingWorkouts.append(workout)
+        UserDefaultsManager.saveWorkouts(existingWorkouts)
         
-        // Create a workout for each exercise
-        let workouts = exerciseRecords.map { record -> Workout in
-            let filledSetRecords = record.setRecords.compactMap { setRecord -> SetRecord? in
-                SetRecord(
-                    weight: setRecord.weight,
-                    reps: setRecord.reps,
-                    elapsedTime: setRecord.elapsedTime,
-                    distance: setRecord.distance,
-                    calories: setRecord.calories,
-                    custom: setRecord.custom
-                )
-            }
-            return Workout(
-                exerciseType: record.selectedExerciseType,
-                sets: filledSetRecords,
-                timestamp: Date()
-            )
-        }
-        
-        // Append the new workouts to savedWorkouts
-        savedWorkouts.append(contentsOf: workouts)
-        
-        // Save the updated list of workouts to UserDefaults
-        if let encoded = try? JSONEncoder().encode(savedWorkouts) {
-            UserDefaults.standard.set(encoded, forKey: "workouts")
-        }
-        
-        showAlert = true
+        // Reset exercise records after saving
+        exerciseRecords = [ExerciseRecord()]
+        UserDefaultsManager.saveExerciseRecords(exerciseRecords)
     }
     
     func clearInputFields() {
@@ -530,6 +505,38 @@ struct MenuView: View {
     func findMostRecentWorkout(for exerciseType: String) -> Workout? {
         return savedWorkouts.filter { $0.exerciseType == exerciseType }.last
     }
+
+    func createWorkout() -> Workout {
+        let workout = Workout(
+            exerciseType: "",
+            sets: [],
+            timestamp: Date()
+        )
+        
+        // Create an array to store all sets from all exercise records
+        var allSets: [(type: String, set: SetRecord)] = []
+        
+        // Gather all sets from all exercise records
+        for record in exerciseRecords {
+            for set in record.setRecords {
+                // Only add sets that have some data
+                if !set.isEmpty {
+                    allSets.append((type: record.selectedExerciseType, set: set))
+                }
+            }
+        }
+        
+        // If we have any sets, create the workout with the first exercise type
+        if let firstSet = allSets.first {
+            return Workout(
+                exerciseType: firstSet.type,
+                sets: allSets.filter { $0.type == firstSet.type }.map { $0.set },
+                timestamp: Date()
+            )
+        }
+        
+        return workout
+    }
 }
 
 // Helper to format the timestamp
@@ -544,8 +551,8 @@ struct ContentView_Previews: PreviewProvider {
         // Preview with sample data
         ContentView(
             exercises: [
-                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps]),
-                Exercise(name: "Squats", selectedMetrics: [.weight, .reps])
+                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
+                Exercise(name: "Squats", selectedMetrics: [.weight, .reps], category: .legs)
             ],
             exerciseRecords: [
                 ExerciseRecord(
@@ -558,6 +565,7 @@ struct ContentView_Previews: PreviewProvider {
             ]
         )
         .environment(\.theme, AppTheme())
+        .environmentObject(QuoteManager())
     }
 }
 
