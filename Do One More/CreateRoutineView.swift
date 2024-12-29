@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct CreateRoutineView: View {
+    var routine: Routine
     @Binding var routines: [Routine]
-    @State private var routineName: String = ""
-    @State private var selectedItems: [RoutineItem] = []
+    @State private var routineName: String
+    @State private var selectedItems: [RoutineItem]
     @State private var showAlert = false
     @State private var showingNewExerciseView = false
     @State private var showingHeaderAlert = false
@@ -11,23 +12,37 @@ struct CreateRoutineView: View {
     @State private var editingHeaderIndex: Int?
     @State var exercises: [Exercise] = UserDefaultsManager.loadExercises()
     @State private var flashItem: UUID? = nil
+    @State private var editMode: EditMode = .inactive // Add EditMode state
+
     @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
-
+    
+    init(routine: Routine, routines: Binding<[Routine]>) {
+        self.routine = routine
+        self._routines = routines
+        self._routineName = State(initialValue: routine.name)
+        self._selectedItems = State(initialValue: routine.items) // Load both exercises and headers
+    }
+    
+    var hasValidInput: Bool {
+        !routineName.isEmpty
+    }
+    
     var body: some View {
-        NavigationView {
-            ZStack {
-                theme.backgroundColor.edgesIgnoringSafeArea(.all)
-                
-                VStack(spacing: 0) {
-                    dragHandle
+        ZStack {
+            theme.backgroundColor.edgesIgnoringSafeArea(.all)
+            
+            VStack(alignment: .leading) {
+                // Section: Routine Name
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Routine Name")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(theme.primaryColor)
                     
-                    // Name TextField
                     TextField("", text: $routineName)
                         .font(theme.secondaryFont)
                         .foregroundColor(.white)
                         .padding()
-                        .background(Color.black)
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
@@ -36,252 +51,223 @@ struct CreateRoutineView: View {
                         .customPlaceholder(
                             show: routineName.isEmpty,
                             placeholder: "Enter Routine Name",
-                            placeholderColor: .gray
+                            placeholderColor: .gray // Use contrasting color
                         )
-                        .padding()
+                        .autocapitalization(.words)
+                        .textInputAutocapitalization(.words)
+                        .padding(.horizontal)
+                }
+                
+                // All Exercises Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Choose exercises for your routine")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.bottom, 5)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 2)
+                                .foregroundColor(theme.primaryColor)
+                                .offset(y: 10),
+                            alignment: .bottomLeading
+                        )
                     
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            // Available Exercises Section
-                            availableExercisesSection
-                            
-                            // Buttons
-                            HStack(spacing: 20) {
-                                Button(action: {
-                                    showingNewExerciseView = true
-                                }) {
-                                    Text("Create New Exercise")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(theme.buttonTextColor)
-                                        .padding(theme.buttonPadding)
-                                        .background(theme.buttonBackgroundColor)
-                                        .cornerRadius(theme.buttonCornerRadius)
-                                }
-                                
-                                Button(action: {
-                                    showingHeaderAlert = true
-                                }) {
-                                    Text("Add Header")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(theme.buttonTextColor)
-                                        .padding(theme.buttonPadding)
-                                        .background(theme.buttonBackgroundColor)
-                                        .cornerRadius(theme.buttonCornerRadius)
-                                }
-                            }
-                            .padding(.vertical)
-                            
-                            // Selected Items Section
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text("Selected Items")
+                    // List of All Exercises with black background and custom styling
+                    List {
+                        ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
+                            let categoryExercises = exercises.filter { $0.category == category }
+                            if !categoryExercises.isEmpty {
+                                // Category header with underline
+                                Text(category.rawValue)
                                     .font(theme.secondaryFont)
                                     .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
+                                    .padding(.horizontal)
+                                    .padding(.top, 10)
                                     .overlay(
                                         Rectangle()
-                                            .frame(height: 2)
+                                            .frame(height: 1)
                                             .foregroundColor(theme.primaryColor)
-                                            .offset(y: 10),
+                                            .offset(y: 5),
                                         alignment: .bottom
                                     )
-                                    .padding(.bottom, 10)
-                                    .background(theme.backgroundColor)
-                                
-                                ForEach(Array(selectedItems.enumerated()), id: \.element.id) { index, item in
-                                    switch item {
-                                    case .exercise(let exercise):
-                                        HStack {
-                                            Text(exercise.name)
-                                                .foregroundColor(.white)
-                                                .padding(.leading, 10)
-                                            Spacer()
+                                    .background(theme.backgroundColor) // Add black background
+
+                                ForEach(categoryExercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
+                                    MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
+                                        selectedItems.append(.exercise(exercise))
+                                        flashItem = exercise.id
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            flashItem = nil
                                         }
-                                        .padding(.vertical, 12)
-                                        .background(theme.primaryColor)
-                                        .cornerRadius(8)
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 4)
-                                        
-                                    case .header(let name):
-                                        HStack {
-                                            Spacer()
-                                            Text(name)
-                                                .foregroundColor(.white)
-                                                .padding(.vertical, 12)
-                                            Spacer()
-                                            Button(action: {
-                                                editingHeaderIndex = index
-                                                headerName = name
-                                                showingHeaderAlert = true
-                                            }) {
-                                                Image(systemName: "pencil")
-                                                    .foregroundColor(.gray)
-                                            }
-                                            .padding(.trailing, 10)
-                                        }
-                                        .overlay(
-                                            Rectangle()
-                                                .frame(height: 1)
-                                                .foregroundColor(theme.primaryColor)
-                                                .offset(y: 12),
-                                            alignment: .bottom
-                                        )
-                                        .padding(.horizontal)
                                     }
+                                    .listRowBackground(Color.clear)
                                 }
                             }
-                            .background(theme.backgroundColor)
-                            
-                            // Save Button
-                            Button(action: saveRoutine) {
-                                Text("Save Routine")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(!routineName.isEmpty ? theme.buttonTextColor : theme.secondaryColor)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                                    .background(!routineName.isEmpty ? theme.buttonBackgroundColor : Color.gray)
-                                    .cornerRadius(theme.buttonCornerRadius)
-                            }
-                            .disabled(routineName.isEmpty)
-                            .padding()
                         }
+                        .listStyle(PlainListStyle()) // Add plain list style
+                        .scrollContentBackground(.hidden) // Hide the scroll background
                         .background(theme.backgroundColor)
+                        .listStyle(InsetListStyle())
+                        .frame(maxWidth: .infinity)
                     }
+                    
+                    // Centered "Create New Exercise" and "Add Header" Buttons
+                    HStack {
+                        Button(action: {
+                            showingNewExerciseView = true
+                        }) {
+                            Text("Create New Exercise")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                        .sheet(isPresented: $showingNewExerciseView) {
+                            NewExerciseView(exercises: $exercises)
+                                .onDisappear {
+                                    UserDefaultsManager.saveExercises(exercises)
+                                    if let lastCreatedExercise = exercises.last {
+                                        selectedItems.append(.exercise(lastCreatedExercise))
+                                    }
+                                }
+                        }
+                        
+                        Button(action: {
+                            showingHeaderAlert = true
+                        }) {
+                            Text("Add Header")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+                
+                // Section: Selected Items (Exercises + Headers)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Your Routine")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.bottom, 5)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 2)
+                                .foregroundColor(theme.primaryColor)
+                                .offset(y: 10),
+                            alignment: .bottomLeading
+                        )
+                    
+                    List {
+                        ForEach(Array(selectedItems.enumerated()), id: \.element.id) { index, item in
+                            switch item {
+                            case .exercise(let exercise):
+                                HStack {
+                                    Text(exercise.name)
+                                        .foregroundColor(.white)
+                                        .padding(.leading, 10)
+                                    
+                                    Spacer()
+                                }
+                                .padding(.vertical, 12)
+                                .background(theme.primaryColor)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .listRowInsets(EdgeInsets())
+                                
+                            case .header(let name):
+                                HStack {
+                                    Spacer() // Add a spacer before the text to help center it
+                                    // Add dashes to either side of the header name
+                                        Text("- \(name) -")
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10) // Adjust the padding to be horizontal for better balance
+                                    Spacer() // Add another spacer after the text to keep it centered
+
+                                    // Hidden pencil button, but still functional
+                                    Button(action: {
+                                        editingHeaderIndex = index
+                                        headerName = name
+                                        showingHeaderAlert = true
+                                    }) {
+                                        Image(systemName: "pencil")
+                                            .foregroundColor(.gray) // Make the pencil invisible with black color
+                                    }
+                                    .padding(.trailing, 10) // Keep the trailing padding for consistent spacing
+                                }
+                                .padding(.vertical, 12)
+                                .background(Color.gray)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .listRowInsets(EdgeInsets())
+                            }
+                        }
+                        .onDelete(perform: deleteItem)
+                        .onMove(perform: moveItem)
+                        .listRowBackground(Color.clear)
+                    }
+                    .scrollContentBackground(.hidden)
                     .background(theme.backgroundColor)
+                    .listStyle(InsetListStyle())
+                    .environment(\.editMode, $editMode) // Apply edit mode to the list
                 }
+                
+                Button(action: saveRoutine) {
+                    Text("Save Routine")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(hasValidInput ? theme.buttonTextColor : theme.secondaryColor)
+                        .padding(theme.buttonPadding)
+                        .background(theme.buttonBackgroundColor)
+                        .cornerRadius(theme.buttonCornerRadius)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .disabled(!hasValidInput)
+                .alert(isPresented: $showAlert) {
+                    Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")) {
+                        dismiss()
+                    })
+                }
+                .padding(.top, 10)
+                .padding(.horizontal)
             }
-            .background(theme.backgroundColor)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    UnderlinedTitle(title: "Create A Routine")
-                }
+            .padding(.top)
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                UnderlinedTitle(title: "Create Routine")
             }
         }
-        .sheet(isPresented: $showingNewExerciseView) {
-            NewExerciseView(exercises: $exercises)
-                .onDisappear {
-                    UserDefaultsManager.saveExercises(exercises)
-                    if let lastCreatedExercise = exercises.last {
-                        selectedItems.append(.exercise(lastCreatedExercise))
-                    }
-                }
+        .onAppear {
+            exercises = UserDefaultsManager.loadExercises()
         }
-        .alert("Name your header", isPresented: $showingHeaderAlert) {
+        .alert("Name your header", isPresented: $showingHeaderAlert, actions: {
             TextField("Header", text: $headerName)
-            Button("OK") {
+            Button("OK", action: {
                 if let index = editingHeaderIndex {
                     selectedItems[index] = .header(headerName)
-                    editingHeaderIndex = nil
                 } else {
                     selectedItems.append(.header(headerName))
                 }
-            }
-            Button("Cancel", role: .cancel) {
                 editingHeaderIndex = nil
-            }
-        }
-        .alert("Routine Saved", isPresented: $showAlert) {
-            Button("OK") {
-                dismiss()
-            }
-        }
-        .background(theme.backgroundColor)
+            })
+            Button("Cancel", role: .cancel, action: {
+                editingHeaderIndex = nil
+            })
+        })
     }
-
-    // Helper Views
-    private var dragHandle: some View {
-        HStack {
-            Capsule()
-                .fill(Color.gray.opacity(0.7))
-                .frame(width: 40, height: 5)
-                .padding(.top, 10)
-                .padding(.bottom, 10)
-        }
-        .frame(maxWidth: .infinity)
-        .background(theme.backgroundColor)
+    
+    func moveItem(from source: IndexSet, to destination: Int) {
+        selectedItems.move(fromOffsets: source, toOffset: destination)
     }
-
-    private var availableExercisesSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Available Exercises")
-                .font(theme.secondaryFont)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .overlay(
-                    Rectangle()
-                        .frame(height: 2)
-                        .foregroundColor(theme.primaryColor)
-                        .offset(y: 10),
-                    alignment: .bottom
-                )
-                .padding(.bottom, 10)
-                .background(theme.backgroundColor)
-            
-            exercisesList
-        }
-        .background(theme.backgroundColor)
+    
+    func deleteItem(at offsets: IndexSet) {
+        selectedItems.remove(atOffsets: offsets)
     }
-
-    private var exercisesList: some View {
-        ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
-            let categoryExercises = exercises.filter { $0.category == category }
-            if !categoryExercises.isEmpty {
-                categoryHeader(category)
-                exercisesForCategory(categoryExercises)
-            }
-        }
-    }
-
-    private func categoryHeader(_ category: ExerciseCategory) -> some View {
-        Text(category.rawValue)
-            .font(theme.secondaryFont)
-            .foregroundColor(.white)
-            .padding(.horizontal)
-            .padding(.top, 10)
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundColor(theme.primaryColor)
-                    .offset(y: 5),
-                alignment: .bottom
-            )
-            .background(theme.backgroundColor)
-    }
-
-    private func exercisesForCategory(_ exercises: [Exercise]) -> some View {
-        ForEach(exercises.sorted(by: { $0.name < $1.name })) { exercise in
-            MultipleSelectionRow(
-                title: exercise.name,
-                isSelected: selectedItems.contains(where: {
-                    if case .exercise(let selectedExercise) = $0 {
-                        return selectedExercise.id == exercise.id
-                    }
-                    return false
-                }),
-                isFlashing: flashItem == exercise.id
-            ) {
-                if let index = selectedItems.firstIndex(where: {
-                    if case .exercise(let selectedExercise) = $0 {
-                        return selectedExercise.id == exercise.id
-                    }
-                    return false
-                }) {
-                    selectedItems.remove(at: index)
-                } else {
-                    selectedItems.append(.exercise(exercise))
-                    flashItem = exercise.id
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        flashItem = nil
-                    }
-                }
-            }
-            .background(theme.backgroundColor)
-        }
-    }
-
+    
     func saveRoutine() {
         guard !routineName.isEmpty else { return }
         
@@ -293,9 +279,12 @@ struct CreateRoutineView: View {
         }
         
         let newRoutine = Routine(name: routineName, exercises: exercisesOnly, items: selectedItems)
-        routines.append(newRoutine)
-        UserDefaultsManager.saveRoutines(routines)
-        showAlert = true
+        
+        if let index = routines.firstIndex(where: { $0.id == routine.id }) {
+            routines[index] = newRoutine
+            UserDefaultsManager.saveRoutines(routines)
+            showAlert = true
+        }
     }
 }
 

@@ -30,7 +30,6 @@ struct RoutineListView: View {
                         .scrollContentBackground(.hidden)
                     }
                 }
-                .navigationBarTitleDisplayMode(.inline)
                 
                 // Create New Routine Button
                 VStack {
@@ -52,14 +51,16 @@ struct RoutineListView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    UnderlinedTitle(title: "Routines")
-                }
+            .safeAreaInset(edge: .top) {
+                UnderlinedTitle(title: "Routines")
+                    .background(theme.backgroundColor)
             }
         }
         .sheet(isPresented: $showingCreateRoutineView) {
-            CreateRoutineView(routines: $routines)
+            CreateRoutineView(
+                routine: Routine(name: "", exercises: [], items: []),
+                routines: $routines
+            )
         }
         .onAppear {
             routines = UserDefaultsManager.loadRoutines()
