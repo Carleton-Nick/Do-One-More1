@@ -290,12 +290,9 @@ struct CreateRoutineView: View {
         }
         
         let newRoutine = Routine(name: routineName, exercises: exercisesOnly, items: selectedItems)
-        
-        if let index = routines.firstIndex(where: { $0.id == routine.id }) {
-            routines[index] = newRoutine
-            UserDefaultsManager.saveRoutines(routines)
-            showAlert = true
-        }
+        routines.append(newRoutine)  // Add the new routine instead of updating
+        UserDefaultsManager.saveRoutines(routines)
+        showAlert = true
     }
 }
 
