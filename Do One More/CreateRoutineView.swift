@@ -88,20 +88,22 @@ struct CreateRoutineView: View {
                         ForEach(ExerciseCategory.allCasesSorted, id: \.self) { category in
                             let categoryExercises = exercises.filter { $0.category == category }
                             if !categoryExercises.isEmpty {
-                                // Category header with underline
-                                Text(category.rawValue)
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal)
-                                    .padding(.top, 10)
-                                    .overlay(
-                                        Rectangle()
-                                            .frame(height: 1)
-                                            .foregroundColor(theme.primaryColor)
-                                            .offset(y: 5),
-                                        alignment: .bottom
-                                    )
-                                    .background(theme.backgroundColor) // Add black background
+                                HStack {
+                                    Spacer()
+                                    Text(category.rawValue)
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 2)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(theme.primaryColor, lineWidth: 1)
+                                        )
+                                        .background(theme.backgroundColor)
+                                    Spacer()
+                                }
+                                .listRowBackground(theme.backgroundColor)
+                                .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
 
                                 ForEach(categoryExercises.sorted(by: { $0.name < $1.name }), id: \.self) { exercise in
                                     MultipleSelectionRow(title: exercise.name, isSelected: false, isFlashing: flashItem == exercise.id) {
@@ -112,15 +114,15 @@ struct CreateRoutineView: View {
                                         }
                                     }
                                     .listRowBackground(Color.clear)
+                                    .listRowInsets(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 0))
                                 }
                             }
                         }
-                        .listStyle(PlainListStyle()) // Add plain list style
-                        .scrollContentBackground(.hidden) // Hide the scroll background
-                        .background(theme.backgroundColor)
-                        .listStyle(InsetListStyle())
-                        .frame(maxWidth: .infinity)
                     }
+                    .scrollContentBackground(.hidden)
+                    .background(theme.backgroundColor)
+                    .listStyle(InsetListStyle())
+                    .frame(maxWidth: .infinity)
                     
                     // Centered "Create New Exercise" and "Add Header" Buttons
                     HStack {
@@ -188,31 +190,30 @@ struct CreateRoutineView: View {
                                 .background(theme.primaryColor)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .listRowInsets(EdgeInsets())
+                                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                                 
                             case .header(let name):
                                 HStack {
-                                    Spacer() // Add a spacer before the text to help center it
-                                    // Add dashes to either side of the header name
-                                        Text("- \(name) -")
+                                    Spacer()
+                                    Text("- \(name) -")
                                         .foregroundColor(.white)
-                                        .padding(.horizontal, 10) // Adjust the padding to be horizontal for better balance
-                                    Spacer() // Add another spacer after the text to keep it centered
-
-                                    // Hidden pencil button, but still functional
+                                        .padding(.horizontal, 10)
+                                    Spacer()
                                     Button(action: {
                                         editingHeaderIndex = index
                                         headerName = name
                                         showingHeaderAlert = true
                                     }) {
                                         Image(systemName: "pencil")
-                                            .foregroundColor(.gray) // Make the pencil invisible with black color
+                                            .foregroundColor(.gray)
                                     }
-                                    .padding(.trailing, 10) // Keep the trailing padding for consistent spacing
+                                    .padding(.trailing, 10)
                                 }
                                 .padding(.vertical, 12)
                                 .background(Color.gray)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .listRowInsets(EdgeInsets())
+                                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                             }
                         }
                         .onDelete(perform: deleteItem)
