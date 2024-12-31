@@ -33,6 +33,16 @@ struct CreateRoutineView: View {
             theme.backgroundColor.edgesIgnoringSafeArea(.all)
             
             VStack(alignment: .leading) {
+                // Drag Handle
+                HStack {
+                    Capsule()
+                        .fill(Color.gray.opacity(0.7))
+                        .frame(width: 120, height: 5)
+                        .padding(.top, 10)
+                        .padding(.bottom, 10)
+                }
+                .frame(maxWidth: .infinity)
+                
                 // Section: Routine Name
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Routine Name")
