@@ -18,9 +18,10 @@ struct MultipleSelectionRow: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(
-                isSelected ? Color.orange.opacity(0.7) : theme.backgroundColor
+                isFlashing ? Color.orange : (isSelected ? Color.orange.opacity(0.7) : theme.backgroundColor)
             )
         }
         .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .animation(.easeInOut(duration: 0.2), value: isFlashing)
     }
 }
