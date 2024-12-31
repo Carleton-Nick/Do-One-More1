@@ -73,6 +73,7 @@ struct ContentView: View {
                 }
                 .onAppear {
                     quoteManager.showMotivationalQuote()
+                    savedWorkouts = UserDefaultsManager.loadWorkouts()
                     if fromRoutine {
                         // Load existing records and append the new one
                         var currentRecords = UserDefaultsManager.loadExerciseRecords()
@@ -437,6 +438,9 @@ struct MenuView: View {
         var existingWorkouts = UserDefaultsManager.loadWorkouts()
         existingWorkouts.append(workout)
         UserDefaultsManager.saveWorkouts(existingWorkouts)
+        
+        // Update local savedWorkouts array
+        savedWorkouts = existingWorkouts
         
         // Reset exercise records after saving
         exerciseRecords = [ExerciseRecord()]
