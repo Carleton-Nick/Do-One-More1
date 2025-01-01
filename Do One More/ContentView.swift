@@ -49,11 +49,17 @@ struct ContentView: View {
             ZStack {
                 theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 VStack {
+                    // Motivational Quote at the top
+                    if quoteManager.showQuote {
+                        MotivationalQuoteView(quote: quoteManager.currentQuote ?? "")
+                            .padding(.top, 10)
+                    }
+                    
                     VStack {
                         exerciseRecordsList() // List of Exercise Records
                     }
                     
-                    Spacer() // This pushes everything below down
+                    Spacer()
                     
                     SaveAndAddButtons(
                         exerciseRecords: $exerciseRecords,
@@ -72,7 +78,9 @@ struct ContentView: View {
                     toolbarItems()
                 }
                 .onAppear {
-                    quoteManager.showMotivationalQuote()
+                    if !quoteManager.isTimerRunning {
+                        quoteManager.resumeTimer()
+                    }
                     savedWorkouts = UserDefaultsManager.loadWorkouts()
                     if fromRoutine {
                         // Load existing records and append the new one
@@ -98,6 +106,7 @@ struct ContentView: View {
         }
         .onDisappear {
             if !fromRoutine {
+                quoteManager.pauseTimer()
                 // Clear the saved records when leaving the main view (not from routine)
                 UserDefaultsManager.saveExerciseRecords([ExerciseRecord()])
             }
@@ -118,11 +127,6 @@ struct ContentView: View {
                         findMostRecentWorkout: findMostRecentWorkout(for:)
                     )
                     .padding(.top, 10) // Add padding to the top of each exercise record
-                }
-                
-                if quoteManager.showQuote {
-                    MotivationalQuoteView(quote: quoteManager.currentQuote ?? "")
-                        .padding(.vertical)
                 }
             }
             .padding(.bottom, 20) // Add some padding at the bottom of the scroll view

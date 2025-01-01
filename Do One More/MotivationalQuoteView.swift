@@ -3,11 +3,11 @@ import SwiftUI
 struct MotivationalQuoteView: View {
     let quote: String
     @State private var opacity: Double = 1.0
+    @Environment(\.theme) var theme
     
     var body: some View {
         Text(quote)
-            .font(.system(.subheadline, design: .rounded))
-            .italic()
+            .font(.custom("AvenirNext-Regular", size: 16))
             .foregroundColor(.orange)
             .multilineTextAlignment(.center)
             .padding(.horizontal)
