@@ -214,55 +214,66 @@ struct ContentView: View {
                         // Historical Data Section
                         if let recentWorkout = findMostRecentWorkout(exerciseRecord.selectedExerciseType) {
                             VStack(alignment: .leading) {
-                                Button(action: {
-                                    exerciseRecord.showHistoricalData.toggle()
-                                }) {
-                                    Text(exerciseRecord.showHistoricalData ? "Hide Last" : "Show Last")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.orange)
-                                }
-                                .buttonStyle(BorderlessButtonStyle())
-                                
-                                if exerciseRecord.showHistoricalData {
-                                    Text("\(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
-                                        .font(theme.historicalTitleFont)
-                                        .foregroundColor(.orange)
-                                    
-                                    ForEach(recentWorkout.sets, id: \.self) { set in
-                                        HStack(alignment: .top, spacing: 8) {
-                                            if let weight = set.weight {
-                                                Text("Weight: \(weight)lbs")
-                                                    .font(theme.historicalDataFont)
-                                                    .foregroundColor(.white)
-                                            }
-                                            if let reps = set.reps {
-                                                Text("Reps: \(reps)")
-                                                    .font(theme.historicalDataFont)
-                                                    .foregroundColor(.white)
-                                            }
-                                            if let time = set.elapsedTime {
-                                                Text("Time: \(time)")
-                                                    .font(theme.historicalDataFont)
-                                                    .foregroundColor(.white)
-                                            }
-                                            if let distance = set.distance {
-                                                Text("Distance: \(distance)mi")
-                                                    .font(theme.historicalDataFont)
-                                                    .foregroundColor(.white)
-                                            }
-                                            if let calories = set.calories {
-                                                Text("Cal: \(calories)")
-                                                    .font(theme.historicalDataFont)
-                                                    .foregroundColor(.white)
-                                            }
-                                            if let notes = set.custom {
-                                                Text("Notes: \(notes)")
-                                                    .font(theme.historicalDataFont)
-                                                    .foregroundColor(.white)
+                                VStack(alignment: .leading) {
+                                    if exerciseRecord.showHistoricalData {
+                                        VStack(alignment: .leading) {
+                                            Text("\(recentWorkout.exerciseType) - \(formatTimestamp(recentWorkout.timestamp))")
+                                                .font(theme.historicalTitleFont)
+                                                .foregroundColor(.orange)
+                                            
+                                            ForEach(recentWorkout.sets, id: \.self) { set in
+                                                HStack(alignment: .top, spacing: 8) {
+                                                    if let weight = set.weight {
+                                                        Text("Weight: \(weight)lbs")
+                                                            .font(theme.historicalDataFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let reps = set.reps {
+                                                        Text("Reps: \(reps)")
+                                                            .font(theme.historicalDataFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let time = set.elapsedTime {
+                                                        Text("Time: \(time)")
+                                                            .font(theme.historicalDataFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let distance = set.distance {
+                                                        Text("Distance: \(distance)mi")
+                                                            .font(theme.historicalDataFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let calories = set.calories {
+                                                        Text("Cal: \(calories)")
+                                                            .font(theme.historicalDataFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    if let notes = set.custom {
+                                                        Text("Notes: \(notes)")
+                                                            .font(theme.historicalDataFont)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                .transition(.opacity)
+                                .animation(.easeInOut(duration: 0.5), value: exerciseRecord.showHistoricalData)
+                                
+                                Button(action: {
+                                    withAnimation {
+                                        exerciseRecord.showHistoricalData.toggle()
+                                    }
+                                }) {
+                                    Text(exerciseRecord.showHistoricalData ? "Hide Last" : "Show Last")
+                                        .font(theme.secondaryFont)
+                                        .foregroundColor(theme.buttonTextColor)
+                                        .padding(theme.buttonPadding)
+                                        .background(theme.buttonBackgroundColor)
+                                        .cornerRadius(theme.buttonCornerRadius)
+                                }
+                                .buttonStyle(BorderlessButtonStyle())
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, UIScreen.main.bounds.width * 0.04)

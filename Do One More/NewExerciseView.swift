@@ -5,7 +5,7 @@ struct NewExerciseView: View {
     @Environment(\.theme) var theme
     @Binding var exercises: [Exercise]
     @State private var exerciseName = ""
-    @State private var selectedMetrics: Set<ExerciseMetric> = []
+    @State private var selectedMetrics: [ExerciseMetric] = []
     @State private var selectedCategory: ExerciseCategory = .arms  // Default category
     @State private var showAlert = false
 
@@ -83,9 +83,9 @@ struct NewExerciseView: View {
                             get: { selectedMetrics.contains(metric) },
                             set: { isSelected in
                                 if isSelected {
-                                    selectedMetrics.insert(metric)
+                                    selectedMetrics.append(metric)
                                 } else {
-                                    selectedMetrics.remove(metric)
+                                    selectedMetrics.removeAll { $0 == metric }
                                 }
                             }
                         )) {
@@ -133,7 +133,7 @@ struct NewExerciseView: View {
 
         let newExercise = Exercise(
             name: exerciseName,
-            selectedMetrics: Array(selectedMetrics),
+            selectedMetrics: selectedMetrics,
             category: selectedCategory
         )
         exercises.append(newExercise)

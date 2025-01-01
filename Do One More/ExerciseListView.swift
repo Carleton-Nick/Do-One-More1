@@ -73,13 +73,19 @@ struct ExerciseListView: View {
 
     // Updated delete function to handle categorized exercises
     func deleteExercise(category: ExerciseCategory, at offsets: IndexSet) {
-        let categoryExercises = exercises.filter { $0.category == category }
-        offsets.forEach { index in
-            if let exerciseToDelete = categoryExercises[safe: index],
-               let originalIndex = exercises.firstIndex(of: exerciseToDelete) {
-                exercises.remove(at: originalIndex)
-            }
+        // Get all exercises in this category with their original indices
+        let categoryExercisesWithIndices = exercises.enumerated()
+            .filter { $0.element.category == category }
+            .map { (index: $0.offset, exercise: $0.element) }
+        
+        // Map the offset indices to the original array indices
+        let originalIndices = offsets.map { categoryExercisesWithIndices[$0].index }
+        
+        // Remove exercises in reverse order to maintain correct indices
+        for index in originalIndices.sorted(by: >) {
+            exercises.remove(at: index)
         }
+        
         UserDefaultsManager.saveExercises(exercises)
     }
 }
