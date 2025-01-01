@@ -91,4 +91,8 @@ class UserDefaultsManager {
         let domain = Bundle.main.bundleIdentifier!
         UserDefaults.standard.removePersistentDomain(forName: domain)
     }
+
+    static func clearRoutines() {
+        UserDefaults.standard.removeObject(forKey: "routines")
+    }
 }

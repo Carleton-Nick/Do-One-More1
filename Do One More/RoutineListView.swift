@@ -64,9 +64,6 @@ struct RoutineListView: View {
         }
         .onAppear {
             routines = UserDefaultsManager.loadRoutines()
-            if routines.isEmpty {
-                createSampleRoutines()
-            }
         }
     }
 
@@ -143,25 +140,6 @@ struct RoutineListView_Previews: PreviewProvider {
         NavigationView {
             RoutineListView()
                 .environment(\.theme, AppTheme())
-                .onAppear {
-                    // Add sample routine data for preview
-                    let sampleRoutines = [
-                        Routine(
-                            name: "Push Day",
-                            exercises: [
-                                Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest),
-                                Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps], category: .chest)
-                            ],
-                            items: [
-                                .header("Chest"),
-                                .exercise(Exercise(name: "Bench Press", selectedMetrics: [.weight, .reps], category: .chest)),
-                                .header("Shoulders"),
-                                .exercise(Exercise(name: "Shoulder Press", selectedMetrics: [.weight, .reps], category: .chest))
-                            ]
-                        )
-                    ]
-                    UserDefaultsManager.saveRoutines(sampleRoutines)
-                }
         }
     }
 }
