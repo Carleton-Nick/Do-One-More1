@@ -436,9 +436,9 @@ struct MenuView: View {
     // MARK: - Workout Management Functions
     
     func saveWorkout() {
-        let workout = createWorkout()
+        let newWorkouts = createWorkout()
         var existingWorkouts = UserDefaultsManager.loadWorkouts()
-        existingWorkouts.append(workout)
+        existingWorkouts.append(contentsOf: newWorkouts)
         UserDefaultsManager.saveWorkouts(existingWorkouts)
         
         // Update local savedWorkouts array
@@ -512,36 +512,31 @@ struct MenuView: View {
         return savedWorkouts.filter { $0.exerciseType == exerciseType }.last
     }
 
-    func createWorkout() -> Workout {
-        let workout = Workout(
-            exerciseType: "",
-            sets: [],
-            timestamp: Date()
-        )
+    func createWorkout() -> [Workout] {
+        var workouts: [Workout] = []
         
-        // Create an array to store all sets from all exercise records
-        var allSets: [(type: String, set: SetRecord)] = []
-        
-        // Gather all sets from all exercise records
+        // Process each exercise record
         for record in exerciseRecords {
-            for set in record.setRecords {
-                // Only add sets that have some data
-                if !set.isEmpty {
-                    allSets.append((type: record.selectedExerciseType, set: set))
-                }
+            // Skip empty records
+            if record.selectedExerciseType.isEmpty {
+                continue
+            }
+            
+            // Filter out empty sets
+            let validSets = record.setRecords.filter { !$0.isEmpty }
+            
+            // Only create a workout if there are valid sets
+            if !validSets.isEmpty {
+                let workout = Workout(
+                    exerciseType: record.selectedExerciseType,
+                    sets: validSets,
+                    timestamp: Date()
+                )
+                workouts.append(workout)
             }
         }
         
-        // If we have any sets, create the workout with the first exercise type
-        if let firstSet = allSets.first {
-            return Workout(
-                exerciseType: firstSet.type,
-                sets: allSets.filter { $0.type == firstSet.type }.map { $0.set },
-                timestamp: Date()
-            )
-        }
-        
-        return workout
+        return workouts
     }
 }
 
