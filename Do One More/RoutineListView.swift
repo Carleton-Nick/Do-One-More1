@@ -17,17 +17,36 @@ struct RoutineListView: View {
                             .foregroundColor(.white)
                             .padding()
                     } else {
-                        List {
-                            ForEach(routines) { routine in
-                                NavigationLink(destination: RoutineDetailView(routine: routine, exercises: exercises, routines: $routines)) {
-                                    Text(routine.name)
-                                        .foregroundColor(.white)
+                        ScrollView {
+                            VStack(spacing: 8) {
+                                ForEach(Array(routines.enumerated()), id: \.element.id) { index, routine in
+                                    HStack {
+                                        Text(routine.name)
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        
+                                        NavigationLink {
+                                            RoutineDetailView(
+                                                routine: routine,
+                                                exercises: exercises,
+                                                routines: $routines
+                                            )
+                                        } label: {
+                                            Text("View")
+                                                .font(theme.secondaryFont)
+                                                .foregroundColor(theme.buttonTextColor)
+                                                .padding(8)
+                                                .background(theme.buttonBackgroundColor)
+                                                .cornerRadius(theme.buttonCornerRadius)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 8)
+                                    .background(theme.backgroundColor)
                                 }
-                                .listRowBackground(theme.backgroundColor)
                             }
-                            .onDelete(perform: deleteRoutine)
                         }
-                        .scrollContentBackground(.hidden)
                     }
                 }
                 
