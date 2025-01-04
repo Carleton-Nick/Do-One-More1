@@ -213,20 +213,49 @@ struct EditRoutineView: View {
                     .environment(\.editMode, $editMode) // Apply edit mode to the list
                 }
                 
-                Button(action: saveRoutine) {
-                    Text("Save Routine")
-                        .font(theme.secondaryFont)
-                        .foregroundColor(hasValidInput ? theme.buttonTextColor : theme.secondaryColor)
-                        .padding(theme.buttonPadding)
-                        .background(theme.buttonBackgroundColor)
-                        .cornerRadius(theme.buttonCornerRadius)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .disabled(!hasValidInput)
-                .alert(isPresented: $showAlert) {
-                    Alert(title: Text("Routine Saved"), message: nil, dismissButton: .default(Text("OK")) {
-                        dismiss()
-                    })
+                // Bottom buttons section
+                HStack {
+                    // Delete button
+                    Button(action: {
+                        showAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "trash")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(.red)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .alert(isPresented: $showAlert) {
+                        Alert(
+                            title: Text("Delete Routine"),
+                            message: Text("Are you sure you want to delete this routine?"),
+                            primaryButton: .destructive(Text("Delete")) {
+                                deleteRoutine()
+                            },
+                            secondaryButton: .cancel()
+                        )
+                    }
+                    
+                    Spacer()
+                        .frame(minWidth: 20)
+                    
+                    // Save button
+                    Button(action: saveRoutine) {
+                        HStack {
+                            Text("Save Routine")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(hasValidInput ? theme.buttonTextColor : theme.secondaryColor)
+                                .padding(theme.buttonPadding)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(theme.buttonCornerRadius)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .disabled(!hasValidInput)
                 }
                 .padding(.top, 10)
                 .padding(.horizontal)
@@ -281,7 +310,15 @@ struct EditRoutineView: View {
         if let index = routines.firstIndex(where: { $0.id == routine.id }) {
             routines[index] = newRoutine
             UserDefaultsManager.saveRoutines(routines)
-            showAlert = true
+            dismiss()
+        }
+    }
+    
+    private func deleteRoutine() {
+        if let index = routines.firstIndex(where: { $0.id == routine.id }) {
+            routines.remove(at: index)
+            UserDefaultsManager.saveRoutines(routines)
+            dismiss()
         }
     }
 }
