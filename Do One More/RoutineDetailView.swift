@@ -41,25 +41,14 @@ struct RoutineDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 16) {
-                    Button(action: {
-                        showingShareSheet = true
-                    }) {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundColor(theme.buttonTextColor)
-                            .padding(theme.buttonPadding)
-                            .background(theme.buttonBackgroundColor)
-                            .cornerRadius(theme.buttonCornerRadius)
-                    }
-                    
-                    NavigationLink(destination: EditRoutineView(routine: routine, routines: $routines)) {
-                        Text("Edit")
-                            .font(theme.secondaryFont)
-                            .foregroundColor(theme.buttonTextColor)
-                            .padding(theme.buttonPadding)
-                            .background(theme.buttonBackgroundColor)
-                            .cornerRadius(theme.buttonCornerRadius)
-                    }
+                Button(action: {
+                    showingShareSheet = true
+                }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundColor(theme.buttonTextColor)
+                        .padding(theme.buttonPadding)
+                        .background(theme.buttonBackgroundColor)
+                        .cornerRadius(theme.buttonCornerRadius)
                 }
             }
         }
