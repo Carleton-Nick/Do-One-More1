@@ -222,7 +222,7 @@ struct EditRoutineView: View {
                         HStack {
                             Image(systemName: "trash")
                                 .font(theme.secondaryFont)
-                                .foregroundColor(.red)
+                                .foregroundColor(.white)
                                 .padding(theme.buttonPadding)
                                 .background(theme.buttonBackgroundColor)
                                 .cornerRadius(theme.buttonCornerRadius)
