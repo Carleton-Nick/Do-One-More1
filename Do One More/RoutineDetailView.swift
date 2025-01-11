@@ -110,6 +110,8 @@ struct RoutineDetailView: View {
             return "🏃‍♂️"
         case .crossfit:
             return "🤾‍♂️"
+        case .core:
+            return "🏋️"
         }
     }
     

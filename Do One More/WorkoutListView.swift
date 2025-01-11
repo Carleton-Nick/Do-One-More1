@@ -49,7 +49,7 @@ struct WorkoutListView: View {
                                 deleteWorkout(at: index)
                             } label: {
                                 Image(systemName: "trash")
-                                    .foregroundColor(.red)
+                                    .foregroundColor(.white)
                                     .padding(8)
                                     .background(theme.buttonBackgroundColor)
                                     .cornerRadius(8)

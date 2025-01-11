@@ -2,17 +2,12 @@ import Foundation
 
 struct MotivationalQuotes {
     static let quotes = [
-        "One more rep, one step closer.",
-        "Your future self is watching you right now.",
-        "The only bad workout is the one that didn't happen.",
-        "Progress is progress, no matter how small.",
-        "You're stronger than you think.",
-        "Every rep counts. Make it happen.",
-        "Small steps, big changes.",
-        "Your only competition is yourself.",
-        "Yesterday you said tomorrow.",
-        "Strength doesn't come from what you can do. It comes from overcoming the things you once thought you couldn't.",
-        "You have to lift the weights, you do the work.  No one can do it for you.",
+        "The only bad workout is the one you didn't do. - Nick Carleton",
+        "It's not about perfection, it's about consistency. - Nick Carleton",
+        "the only reps that count are the ones in the struggle. - Nick Carleton",
+        "It's not about what somebody else is doing.  It's you versus you. - Nick Carleton",
+        "Yesterday you said tomorrow. Do what you said you were going to do. - Nick Carleton",
+        "You lift the weights, you do the work. No one can do it for you. - Nick Carleton",
         // Add more quotes as desired
     ]
     
