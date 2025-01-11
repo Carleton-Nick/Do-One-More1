@@ -11,7 +11,7 @@ class QuoteManager: ObservableObject {
     
     private let quotes = [
         "The only bad workout is the one you didn't do.",
-        "It's not about perfection, it's about consistency.",
+        "We don't need perfection, we just need consistency.",
         "The only reps that count are the ones in the struggle.",
         "It's not about what somebody else is doing. It's you versus you.",
         "Yesterday you said tomorrow. Do what you said you were going to do.",
