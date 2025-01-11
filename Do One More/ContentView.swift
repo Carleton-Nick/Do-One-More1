@@ -38,7 +38,6 @@ struct ContentView: View {
     }
 
     init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false, clearExistingRecords: Bool = false) {
-        self._exercises = State(initialValue: exercises)
         self._exerciseRecords = State(initialValue: exerciseRecords)
         self.fromRoutine = fromRoutine
         self.clearExistingRecords = clearExistingRecords
@@ -81,6 +80,8 @@ struct ContentView: View {
                     if !quoteManager.isTimerRunning {
                         quoteManager.resumeTimer()
                     }
+                    exercises = UserDefaultsManager.loadExercises()
+                    
                     savedWorkouts = UserDefaultsManager.loadWorkouts()
                     if fromRoutine {
                         // Load existing records and append the new one

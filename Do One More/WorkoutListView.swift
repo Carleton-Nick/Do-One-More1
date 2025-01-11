@@ -4,6 +4,8 @@ import UIKit  // For UIActivityViewController
 struct WorkoutListView: View {
     @State private var workouts: [Workout] = []
     @Environment(\.theme) var theme // Inject the global theme
+    @State private var showingDeleteAlert = false
+    @State private var workoutToDelete: Int?
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -104,23 +106,37 @@ struct WorkoutListView: View {
                             .cornerRadius(8)
                         }
                         // Edit button
-                               NavigationLink(destination: EditWorkoutView(workout: $workouts[index]) { updatedWorkout in
-                                   workouts[index] = updatedWorkout
-                                   saveWorkouts()
-                               }) {
-                                   Text("Edit")
-                                       .font(theme.secondaryFont)
-                                       .foregroundColor(theme.buttonTextColor)
-                                       .padding(8)
-                                       .background(theme.buttonBackgroundColor)
-                                       .cornerRadius(8)
-                               }
-                           }
-                           .padding(8)
-                           .background(theme.backgroundColor)
-                           .cornerRadius(8)
-                           .listRowBackground(theme.backgroundColor)
-                       }
+                        HStack(spacing: 12) {
+                            NavigationLink(destination: EditWorkoutView(workout: $workouts[index]) { updatedWorkout in
+                                workouts[index] = updatedWorkout
+                                saveWorkouts()
+                            }) {
+                                Text("Edit")
+                                    .font(theme.secondaryFont)
+                                    .foregroundColor(theme.buttonTextColor)
+                                    .padding(8)
+                                    .background(theme.buttonBackgroundColor)
+                                    .cornerRadius(8)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Button {
+                                deleteWorkout(at: index)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                                    .padding(8)
+                                    .background(theme.buttonBackgroundColor)
+                                    .cornerRadius(8)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .padding(8)
+                        .background(theme.backgroundColor)
+                        .cornerRadius(8)
+                        .listRowBackground(theme.backgroundColor)
+                    }
+                }
                 .scrollContentBackground(.hidden) // Hide the default list background
                 .listStyle(PlainListStyle()) // Simplify the list style to avoid additional padding
             }
@@ -138,6 +154,17 @@ struct WorkoutListView: View {
             .padding([.bottom, .trailing], 20) // Padding from the bottom-right corner
         }
         .onAppear(perform: loadWorkouts)
+        .alert("Delete Workout?", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                if let index = workoutToDelete {
+                    workouts.remove(at: index)
+                    saveWorkouts()
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this workout? This action cannot be undone.")
+        }
     }
 
     func loadWorkouts() {
@@ -211,6 +238,11 @@ struct WorkoutListView: View {
         } catch {
             print("Failed to write CSV file: \(error)")
         }
+    }
+
+    private func deleteWorkout(at index: Int) {
+        workoutToDelete = index
+        showingDeleteAlert = true
     }
 }
 

@@ -94,39 +94,41 @@ struct RoutineDetailView: View {
         .padding(.trailing, 12)
     }
     
-    private func createShareableRoutine() -> URL {
-        // Create a dictionary containing all necessary data
-        let routineData: [String: Any] = [
-            "type": "routine",
-            "name": routine.name,
-            "exercises": routine.exercises.map { exercise in
-                [
-                    "name": exercise.name,
-                    "selectedMetrics": exercise.selectedMetrics.map { $0.rawValue },
-                    "category": exercise.category.rawValue
-                ]
-            },
-            "items": routine.items.map { item in
-                switch item {
-                case .exercise(let exercise):
-                    return ["type": "exercise", "name": exercise.name]
-                case .header(let text):
-                    return ["type": "header", "text": text]
-                }
-            }
-        ]
+    private func emojiForCategory(_ category: ExerciseCategory) -> String {
+        switch category {
+        case .arms:
+            return "💪"
+        case .legs:
+            return "🦵"
+        case .chest:
+            return "🏋️‍♂️"
+        case .back:
+            return "🏋"
+        case .hiit:
+            return "⚡"  
+        case .cardio:
+            return "🏃‍♂️"
+        case .crossfit:
+            return "🤾‍♂️"
+        }
+    }
+    
+    private func createShareableRoutine() -> String {
+        // Create a simple text representation of the routine
+        var routineText = "Exercise Routine: \(routine.name)\n"
         
-        // Convert to JSON data
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: routineData),
-              let jsonString = String(data: jsonData, encoding: .utf8),
-              let encodedString = jsonString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "doonemorefitness://routine?data=\(encodedString)") else {
-            // Fallback to a simple sharing format if JSON creation fails
-            let fallbackURL = URL(string: "doonemorefitness://routine?name=\(routine.name)")!
-            return fallbackURL
+        for item in routine.items {
+            switch item {
+            case .exercise(let exercise):
+                routineText += "• \(exercise.name)\n"
+            case .header(let text):
+                routineText += "\n🔷 \(text)\n"
+            }
         }
         
-        return url
+        routineText += "\nBuilt in Do One More 💪"
+        
+        return routineText
     }
 }
 
@@ -152,7 +154,10 @@ struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let controller = UIActivityViewController(
+            activityItems: items,
+            applicationActivities: nil
+        )
         return controller
     }
     
