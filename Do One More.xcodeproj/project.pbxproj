@@ -16,7 +16,6 @@
 		E570D84D2C6E93EE00652705 /* SetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E570D84C2C6E93EE00652705 /* SetRecord.swift */; };
 		E575FA002CDD9C4F00DFCA88 /* ExerciseRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E575F9FF2CDD9C4F00DFCA88 /* ExerciseRecord.swift */; };
 		E57DD6362D150258002E5EA5 /* RoutineImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD6352D150258002E5EA5 /* RoutineImporter.swift */; };
-		E57DD6382D1EDF11002E5EA5 /* MotivationalQuotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD6372D1EDF11002E5EA5 /* MotivationalQuotes.swift */; };
 		E57DD63A2D1EDF90002E5EA5 /* MotivationalQuoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD6392D1EDF90002E5EA5 /* MotivationalQuoteView.swift */; };
 		E57DD63C2D1EE4A8002E5EA5 /* QuoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD63B2D1EE4A8002E5EA5 /* QuoteManager.swift */; };
 		E57DD63E2D1EE9F7002E5EA5 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DD63D2D1EE9F7002E5EA5 /* SplashScreenView.swift */; };
@@ -56,7 +55,6 @@
 		E570D84C2C6E93EE00652705 /* SetRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRecord.swift; sourceTree = "<group>"; };
 		E575F9FF2CDD9C4F00DFCA88 /* ExerciseRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseRecord.swift; sourceTree = "<group>"; };
 		E57DD6352D150258002E5EA5 /* RoutineImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineImporter.swift; sourceTree = "<group>"; };
-		E57DD6372D1EDF11002E5EA5 /* MotivationalQuotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotivationalQuotes.swift; sourceTree = "<group>"; };
 		E57DD6392D1EDF90002E5EA5 /* MotivationalQuoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotivationalQuoteView.swift; sourceTree = "<group>"; };
 		E57DD63B2D1EE4A8002E5EA5 /* QuoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteManager.swift; sourceTree = "<group>"; };
 		E57DD63D2D1EE9F7002E5EA5 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
@@ -153,7 +151,6 @@
 				E599649C2C2CD86900168FA6 /* Workout.swift */,
 				E59964AA2C2CD9E900168FA6 /* WorkoutListView.swift */,
 				E5DAEEA42D1490DB007B3DF6 /* EditWorkoutView.swift */,
-				E57DD6372D1EDF11002E5EA5 /* MotivationalQuotes.swift */,
 				E57DD6392D1EDF90002E5EA5 /* MotivationalQuoteView.swift */,
 			);
 			path = "Do One More";
@@ -268,7 +265,6 @@
 				E57DD63C2D1EE4A8002E5EA5 /* QuoteManager.swift in Sources */,
 				E585C76A2C6EA76200FF46FE /* CustomButtonStyle.swift in Sources */,
 				E56F0A2B2C8B725F00F277FF /* UserDefaults.swift in Sources */,
-				E57DD6382D1EDF11002E5EA5 /* MotivationalQuotes.swift in Sources */,
 				E599648A2C2CD7F200168FA6 /* Do_One_MoreApp.swift in Sources */,
 				E59964A72C2CD94D00168FA6 /* CreateRoutineView.swift in Sources */,
 			);
