@@ -9,89 +9,101 @@ struct EditWorkoutView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text("Workout Details")) {
-                    TextField("Exercise Type", text: $workout.exerciseType)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                }
+            ZStack {
+                theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 
-                Section(header: Text("Sets")) {
-                    ForEach($workout.sets) { $set in
-                        VStack(alignment: .leading) {
-                            if let weight = set.weight {
-                                TextField("Weight", text: Binding(
-                                    get: { weight },
-                                    set: { set.weight = $0 }
-                                ))
-                                .keyboardType(.numberPad)
-                            }
-                            if let reps = set.reps {
-                                TextField("Reps", text: Binding(
-                                    get: { reps },
-                                    set: { set.reps = $0 }
-                                ))
-                                .keyboardType(.numberPad)
-                            }
-                            if let elapsedTime = set.elapsedTime {
-                                TextField("Time", text: Binding(
-                                    get: { elapsedTime },
-                                    set: { set.elapsedTime = $0 }
-                                ))
-                                .keyboardType(.default)
-                            }
-                            if let distance = set.distance {
-                                TextField("Distance", text: Binding(
-                                    get: { distance },
-                                    set: { set.distance = $0 }
-                                ))
-                                .keyboardType(.decimalPad)
-                            }
-                            if let calories = set.calories {
-                                TextField("Calories", text: Binding(
-                                    get: { calories },
-                                    set: { set.calories = $0 }
-                                ))
-                                .keyboardType(.numberPad)
-                            }
-                            if let custom = set.custom {
-                                TextField("Notes", text: Binding(
-                                    get: { custom },
-                                    set: { set.custom = $0 }
-                                ))
-                            }
-                        }
+                VStack(spacing: 20) {
+                    // Exercise Type Section
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Exercise")
+                            .font(theme.secondaryFont)
+                            .foregroundColor(theme.primaryColor)
+                            .padding(.horizontal)
+                        
+                        TextField("Exercise Type", text: $workout.exerciseType)
+                            .font(theme.secondaryFont)
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.black.opacity(0.2))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(theme.primaryColor, lineWidth: 2)
+                            )
+                            .padding(.horizontal)
                     }
-                    .onDelete(perform: deleteSets)
                     
-                    Button(action: addSet) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Set")
+                    // Sets Section
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Sets")
+                            .font(theme.secondaryFont)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.bottom, 5)
+                            .overlay(
+                                Rectangle()
+                                    .frame(height: 2)
+                                    .foregroundColor(theme.primaryColor)
+                                    .offset(y: 10),
+                                alignment: .bottomLeading
+                            )
+                            .padding(.horizontal)
+                        
+                        ScrollView {
+                            VStack(spacing: 15) {
+                                ForEach($workout.sets.indices, id: \.self) { index in
+                                    SetView(set: $workout.sets[index], index: index)
+                                }
+                            }
+                            .padding(.horizontal)
                         }
-                        .foregroundColor(theme.primaryColor)
+                        
+                        // Add Set Button
+                        Button(action: addSet) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Set")
+                            }
+                            .font(theme.secondaryFont)
+                            .foregroundColor(theme.buttonTextColor)
+                            .padding(theme.buttonPadding)
+                            .frame(maxWidth: .infinity)
+                            .background(theme.buttonBackgroundColor)
+                            .cornerRadius(theme.buttonCornerRadius)
+                        }
+                        .padding(.horizontal)
                     }
                 }
             }
+            .onTapGesture {
+                hideKeyboard()
+            }
             .navigationTitle("Edit Workout")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         onSave(workout)
                         dismiss()
                     }
+                    .font(theme.secondaryFont)
                     .foregroundColor(theme.buttonTextColor)
+                    .padding(8)
+                    .background(theme.buttonBackgroundColor)
+                    .cornerRadius(theme.buttonCornerRadius)
                 }
             }
         }
     }
     
-    // Function to add a new set
     private func addSet() {
-        // Create a new set with the same properties as the last set
-        let newSet: SetRecord
+        let newSet = createNewSet()
+        workout.sets.append(newSet)
+    }
+    
+    private func createNewSet() -> SetRecord {
         if let lastSet = workout.sets.last {
-            // Copy the structure of the last set but with empty values
-            newSet = SetRecord(
+            return SetRecord(
                 weight: lastSet.weight != nil ? "" : nil,
                 reps: lastSet.reps != nil ? "" : nil,
                 elapsedTime: lastSet.elapsedTime != nil ? "" : nil,
@@ -99,16 +111,110 @@ struct EditWorkoutView: View {
                 calories: lastSet.calories != nil ? "" : nil,
                 custom: lastSet.custom != nil ? "" : nil
             )
-        } else {
-            // If no existing sets, create a basic set
-            newSet = SetRecord()
         }
-        workout.sets.append(newSet)
+        return SetRecord()
     }
     
-    // Function to delete sets
-    private func deleteSets(at offsets: IndexSet) {
-        workout.sets.remove(atOffsets: offsets)
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), 
+                                      to: nil, 
+                                      from: nil, 
+                                      for: nil)
+    }
+}
+
+// Helper view for individual sets
+struct SetView: View {
+    @Binding var set: SetRecord
+    let index: Int
+    @Environment(\.theme) var theme
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Set \(index + 1)")
+                .font(theme.secondaryFont)
+                .foregroundColor(.white)
+            
+            VStack(spacing: 8) {
+                if let weight = set.weight {
+                    MetricField(title: "Weight", value: Binding(
+                        get: { weight },
+                        set: { set.weight = $0 }
+                    ), keyboardType: .numberPad)
+                }
+                
+                if let reps = set.reps {
+                    MetricField(title: "Reps", value: Binding(
+                        get: { reps },
+                        set: { set.reps = $0 }
+                    ), keyboardType: .numberPad)
+                }
+                
+                if let time = set.elapsedTime {
+                    MetricField(title: "Time", value: Binding(
+                        get: { time },
+                        set: { set.elapsedTime = $0 }
+                    ))
+                }
+                
+                if let distance = set.distance {
+                    MetricField(title: "Distance", value: Binding(
+                        get: { distance },
+                        set: { set.distance = $0 }
+                    ))
+                }
+                
+                if let calories = set.calories {
+                    MetricField(title: "Calories", value: Binding(
+                        get: { calories },
+                        set: { set.calories = $0 }
+                    ), keyboardType: .numberPad)
+                }
+                
+                if let custom = set.custom {
+                    MetricField(title: "Notes", value: Binding(
+                        get: { custom },
+                        set: { set.custom = $0 }
+                    ))
+                }
+            }
+        }
+        .padding()
+        .background(Color.black.opacity(0.2))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(theme.primaryColor.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+// Reusable metric input field
+struct MetricField: View {
+    let title: String
+    @Binding var value: String
+    var keyboardType: UIKeyboardType = .default
+    @Environment(\.theme) var theme
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(theme.secondaryFont)
+                .foregroundColor(theme.primaryColor)
+                .frame(width: 80, alignment: .leading)
+            
+            TextField(title, text: $value)
+                .font(theme.secondaryFont)
+                .foregroundColor(.white)
+                .padding(10)
+                .background(Color.black.opacity(0.2))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.primaryColor, lineWidth: 1)
+                )
+                .keyboardType(keyboardType)
+        }
     }
 }
 

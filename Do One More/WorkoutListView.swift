@@ -31,16 +31,31 @@ struct WorkoutListView: View {
                 // List of workouts
                 List(workouts.indices, id: \.self) { index in
                     VStack(alignment: .leading, spacing: 10) {
-                        // Display the exercise type with a light orange border
-                        Text(workouts[index].exerciseType)
-                            .font(theme.primaryFont)
-                            .foregroundColor(.orange)
-                            .padding(.vertical, 5)
-                            .padding(.horizontal)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.orange, lineWidth: 2)
-                            )
+                        // Display the exercise type with delete button
+                        HStack {
+                            Text(workouts[index].exerciseType)
+                                .font(theme.primaryFont)
+                                .foregroundColor(.orange)
+                                .padding(.vertical, 5)
+                                .padding(.horizontal)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.orange, lineWidth: 2)
+                                )
+                            
+                            Spacer()
+                            
+                            Button {
+                                deleteWorkout(at: index)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                                    .padding(8)
+                                    .background(theme.buttonBackgroundColor)
+                                    .cornerRadius(8)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
                         
                         Text("Date: \(formatTimestamp(workouts[index].timestamp))")
                             .font(theme.secondaryFont)
@@ -105,37 +120,24 @@ struct WorkoutListView: View {
                             .background(Color.black.opacity(0.2)) // Light background for each set
                             .cornerRadius(8)
                         }
-                        // Edit button
-                        HStack(spacing: 12) {
-                            NavigationLink(destination: EditWorkoutView(workout: $workouts[index]) { updatedWorkout in
-                                workouts[index] = updatedWorkout
-                                saveWorkouts()
-                            }) {
-                                Text("Edit")
-                                    .font(theme.secondaryFont)
-                                    .foregroundColor(theme.buttonTextColor)
-                                    .padding(8)
-                                    .background(theme.buttonBackgroundColor)
-                                    .cornerRadius(8)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            
-                            Button {
-                                deleteWorkout(at: index)
-                            } label: {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.red)
-                                    .padding(8)
-                                    .background(theme.buttonBackgroundColor)
-                                    .cornerRadius(8)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                        // Edit button (now without the delete button)
+                        NavigationLink(destination: EditWorkoutView(workout: $workouts[index]) { updatedWorkout in
+                            workouts[index] = updatedWorkout
+                            saveWorkouts()
+                        }) {
+                            Text("Edit")
+                                .font(theme.secondaryFont)
+                                .foregroundColor(theme.buttonTextColor)
+                                .padding(8)
+                                .background(theme.buttonBackgroundColor)
+                                .cornerRadius(8)
                         }
-                        .padding(8)
-                        .background(theme.backgroundColor)
-                        .cornerRadius(8)
-                        .listRowBackground(theme.backgroundColor)
+                        .buttonStyle(PlainButtonStyle())
                     }
+                    .padding(8)
+                    .background(theme.backgroundColor)
+                    .cornerRadius(8)
+                    .listRowBackground(theme.backgroundColor)
                 }
                 .scrollContentBackground(.hidden) // Hide the default list background
                 .listStyle(PlainListStyle()) // Simplify the list style to avoid additional padding
