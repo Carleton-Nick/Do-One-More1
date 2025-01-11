@@ -5,6 +5,7 @@ enum ExerciseCategory: String, CaseIterable, Codable {
     case legs = "Legs"
     case chest = "Chest"
     case back = "Back"
+    case core = "Core/Stomach"
     case hiit = "HIIT"
     case cardio = "Cardio"
     case crossfit = "Crossfit"
