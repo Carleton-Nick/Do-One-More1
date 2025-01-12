@@ -41,8 +41,8 @@ struct PreloadedExercises {
         Exercise(name: "Single Leg Calf Raises", selectedMetrics: [.weight, .reps], category: .legs),
         Exercise(name: "Leg Extensions", selectedMetrics: [.weight, .reps], category: .legs),
         Exercise(name: "Seated Leg Curls", selectedMetrics: [.weight, .reps], category: .legs),
-        Exercise(name: "Romanian Dead Lifts - Barbell", selectedMetrics: [.weight, .reps], category: .legs),
-        Exercise(name: "Romanian Dead Lifts - Dumbbell", selectedMetrics: [.weight, .reps], category: .legs),
+        Exercise(name: "Romanian Deadlifts - Barbell", selectedMetrics: [.weight, .reps], category: .legs),
+        Exercise(name: "Romanian Deadlifts - Dumbbell", selectedMetrics: [.weight, .reps], category: .legs),
         
         // Arm Exercises
         Exercise(name: "Dips", selectedMetrics: [.reps], category: .arms),

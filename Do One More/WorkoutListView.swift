@@ -3,157 +3,67 @@ import UIKit  // For UIActivityViewController
 
 struct WorkoutListView: View {
     @State private var workouts: [Workout] = []
-    @Environment(\.theme) var theme // Inject the global theme
+    @Environment(\.theme) var theme
     @State private var showingDeleteAlert = false
     @State private var workoutToDelete: Int?
+    @State private var editMode: Bool = false
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            theme.backgroundColor.edgesIgnoringSafeArea(.all) // Set the entire view's background
-
+        ZStack {
+            theme.backgroundColor.edgesIgnoringSafeArea(.all)
+            
             VStack(spacing: 0) {
-                // Saved Workouts Title with underline
-                VStack(spacing: 0) {
+                // Header
+                HStack {
                     Text("Saved Workouts")
                         .font(theme.primaryFont)
                         .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .textCase(.uppercase) // Make text uppercase
-
-                    // Orange underline spanning the width of the screen
-                    Rectangle()
-                        .frame(height: 2)
-                        .foregroundColor(.orange)
-                        .frame(maxWidth: .infinity)
-                }
-                .padding(.top, 8)  // Add slight padding below the top
-
-                // List of workouts
-                List(workouts.indices, id: \.self) { index in
-                    VStack(alignment: .leading, spacing: 10) {
-                        // Display the exercise type with delete button
-                        HStack {
-                            Text(workouts[index].exerciseType)
-                                .font(theme.primaryFont)
-                                .foregroundColor(.orange)
-                                .padding(.vertical, 5)
-                                .padding(.horizontal)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.orange, lineWidth: 2)
-                                )
-                            
-                            Spacer()
-                            
-                            Button {
-                                deleteWorkout(at: index)
-                            } label: {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.white)
-                                    .padding(8)
-                                    .background(theme.buttonBackgroundColor)
-                                    .cornerRadius(8)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        
-                        Text("Date: \(formatTimestamp(workouts[index].timestamp))")
-                            .font(theme.secondaryFont)
-                            .foregroundColor(.white)
-                        
-                        ForEach(Array(workouts[index].sets.enumerated()), id: \.offset) { setIndex, set in
-                            VStack(alignment: .leading, spacing: 5) {
-                                // Set number with light orange underline
-                                Text("Set \(setIndex + 1)")
-                                    .font(theme.primaryFont)
-                                    .foregroundColor(.white)
-                                    .padding(.bottom, 2)
-                                    .overlay(
-                                        Rectangle()
-                                            .frame(height: 1)
-                                            .foregroundColor(.orange) // Light orange underline
-                                            .offset(y: 2),
-                                        alignment: .bottom
-                                    )
-
-                                // Weight and Reps
-                                if let weight = set.weight {
-                                    Text("Weight: \(weight) lbs")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                }
-
-                                if let reps = set.reps {
-                                    Text("Reps: \(reps)")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                }
-
-                                // Time and Distance
-                                if let elapsedTime = set.elapsedTime, !elapsedTime.isEmpty {
-                                    Text("Time: \(elapsedTime)")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                }
-
-                                if let distance = set.distance {
-                                    Text("Distance: \(distance) miles")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                }
-
-                                // Calories
-                                if let calories = set.calories, !calories.isEmpty {
-                                    Text("Calories: \(calories)")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                }
-
-                                // Custom Notes
-                                if let custom = set.custom, !custom.isEmpty {
-                                    Text("Notes: \(custom)")
-                                        .font(theme.secondaryFont)
-                                        .foregroundColor(.white)
-                                }
-                            }
-                            .padding(.vertical, 5) // Space between each set
-                            .background(Color.black.opacity(0.2)) // Light background for each set
-                            .cornerRadius(8)
-                        }
-                        // Edit button (now without the delete button)
-                        NavigationLink(destination: EditWorkoutView(workout: $workouts[index]) { updatedWorkout in
-                            workouts[index] = updatedWorkout
-                            saveWorkouts()
-                        }) {
-                            Text("Edit")
-                                .font(theme.secondaryFont)
-                                .foregroundColor(theme.buttonTextColor)
-                                .padding(8)
-                                .background(theme.buttonBackgroundColor)
-                                .cornerRadius(8)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        .textCase(.uppercase)
+                    
+                    Spacer()
+                    
+                    Button(action: { editMode.toggle() }) {
+                        Text(editMode ? "Done" : "Edit")
+                            .foregroundColor(.orange)
                     }
-                    .padding(8)
-                    .background(theme.backgroundColor)
-                    .cornerRadius(8)
-                    .listRowBackground(theme.backgroundColor)
                 }
-                .scrollContentBackground(.hidden) // Hide the default list background
-                .listStyle(PlainListStyle()) // Simplify the list style to avoid additional padding
+                .padding()
+                
+                Rectangle()
+                    .frame(height: 2)
+                    .foregroundColor(.orange)
+                
+                // Workouts List
+                ScrollView {
+                    VStack(spacing: 15) {
+                        ForEach(workouts.indices, id: \.self) { index in
+                            WorkoutCard(
+                                workout: $workouts[index],
+                                editMode: editMode,
+                                onDelete: {
+                                    workoutToDelete = index
+                                    showingDeleteAlert = true
+                                }
+                            )
+                        }
+                    }
+                    .padding()
+                }
             }
-            // Export CSV Button at the bottom-right corner
-            Button(action: {
-                shareCSV(workouts: workouts) // Trigger CSV share
-            }) {
-                Text("Export CSV")
-                    .font(theme.secondaryFont)
-                    .foregroundColor(theme.buttonTextColor)
-                    .padding(theme.buttonPadding)
-                    .background(theme.buttonBackgroundColor)
-                    .cornerRadius(theme.buttonCornerRadius)
+            
+            // Export CSV Button
+            VStack {
+                Spacer()
+                Button(action: { shareCSV(workouts: workouts) }) {
+                    Text("Export CSV")
+                        .font(theme.secondaryFont)
+                        .foregroundColor(theme.buttonTextColor)
+                        .padding(theme.buttonPadding)
+                        .background(theme.buttonBackgroundColor)
+                        .cornerRadius(theme.buttonCornerRadius)
+                }
+                .padding()
             }
-            .padding([.bottom, .trailing], 20) // Padding from the bottom-right corner
         }
         .onAppear(perform: loadWorkouts)
         .alert("Delete Workout?", isPresented: $showingDeleteAlert) {
@@ -164,11 +74,9 @@ struct WorkoutListView: View {
                     saveWorkouts()
                 }
             }
-        } message: {
-            Text("Are you sure you want to delete this workout? This action cannot be undone.")
         }
     }
-
+    
     func loadWorkouts() {
         workouts = UserDefaultsManager.loadWorkouts().reversed()
     }
@@ -241,10 +149,221 @@ struct WorkoutListView: View {
             print("Failed to write CSV file: \(error)")
         }
     }
+}
 
-    private func deleteWorkout(at index: Int) {
-        workoutToDelete = index
-        showingDeleteAlert = true
+private struct WorkoutCard: View {
+    @Binding var workout: Workout
+    let editMode: Bool
+    let onDelete: () -> Void
+    @Environment(\.theme) var theme
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(workout.exerciseType)
+                    .font(theme.primaryFont)
+                    .foregroundColor(.orange)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.orange, lineWidth: 2)
+                    )
+                
+                Spacer()
+                
+                if editMode {
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .foregroundColor(.white)
+                            .padding(4)
+                            .background(theme.buttonBackgroundColor)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            
+            Text("Date: \(formatTimestamp(workout.timestamp))")
+                .font(theme.secondaryFont)
+                .foregroundColor(.white)
+            
+            ForEach(workout.sets.indices, id: \.self) { setIndex in
+                SetRow(
+                    set: $workout.sets[setIndex],
+                    index: setIndex,
+                    editMode: editMode,
+                    onDelete: {
+                        workout.sets.remove(at: setIndex)
+                    }
+                )
+            }
+            
+            if editMode {
+                Button(action: {
+                    let newSet: SetRecord
+                    if let lastSet = workout.sets.last {
+                        // Copy the structure of the last set but with empty values
+                        newSet = SetRecord(
+                            weight: lastSet.weight != nil ? "" : nil,
+                            reps: lastSet.reps != nil ? "" : nil,
+                            elapsedTime: lastSet.elapsedTime != nil ? "" : nil,
+                            distance: lastSet.distance != nil ? "" : nil,
+                            calories: lastSet.calories != nil ? "" : nil,
+                            custom: lastSet.custom != nil ? "" : nil
+                        )
+                    } else {
+                        // If no existing sets, create a basic set with weight and reps
+                        newSet = SetRecord(weight: "", reps: "")
+                    }
+                    workout.sets.append(newSet)
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add Set")
+                    }
+                    .font(theme.secondaryFont)
+                    .foregroundColor(theme.buttonTextColor)
+                    .frame(maxWidth: .infinity)
+                    .padding(theme.buttonPadding)
+                    .background(theme.buttonBackgroundColor)
+                    .cornerRadius(theme.buttonCornerRadius)
+                }
+            }
+        }
+        .padding()
+        .background(Color.black.opacity(0.2))
+        .cornerRadius(12)
+    }
+}
+
+private struct SetRow: View {
+    @Binding var set: SetRecord
+    let index: Int
+    let editMode: Bool
+    let onDelete: () -> Void
+    @Environment(\.theme) var theme
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text("Set \(index + 1)")
+                    .font(theme.secondaryFont)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                if editMode {
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .foregroundColor(.white)
+                            .padding(4)
+                            .background(theme.buttonBackgroundColor)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            
+            if let weight = set.weight {
+                MetricRow(
+                    title: "Weight",
+                    value: Binding(
+                        get: { weight },
+                        set: { set.weight = $0 }
+                    ),
+                    editMode: editMode,
+                    keyboardType: .numberPad
+                )
+            }
+            
+            if let reps = set.reps {
+                MetricRow(
+                    title: "Reps",
+                    value: Binding(
+                        get: { reps },
+                        set: { set.reps = $0 }
+                    ),
+                    editMode: editMode,
+                    keyboardType: .numberPad
+                )
+            }
+            
+            if let elapsedTime = set.elapsedTime {
+                MetricRow(
+                    title: "Time",
+                    value: Binding(
+                        get: { elapsedTime },
+                        set: { set.elapsedTime = $0 }
+                    ),
+                    editMode: editMode
+                )
+            }
+            
+            if let distance = set.distance {
+                MetricRow(
+                    title: "Distance",
+                    value: Binding(
+                        get: { distance },
+                        set: { set.distance = $0 }
+                    ),
+                    editMode: editMode,
+                    keyboardType: .decimalPad
+                )
+            }
+            
+            if let calories = set.calories {
+                MetricRow(
+                    title: "Calories",
+                    value: Binding(
+                        get: { calories },
+                        set: { set.calories = $0 }
+                    ),
+                    editMode: editMode,
+                    keyboardType: .numberPad
+                )
+            }
+            
+            if let custom = set.custom {
+                MetricRow(
+                    title: "Notes",
+                    value: Binding(
+                        get: { custom },
+                        set: { set.custom = $0 }
+                    ),
+                    editMode: editMode
+                )
+            }
+        }
+        .padding(4)
+        .background(Color.black.opacity(0.15))
+        .cornerRadius(8)
+    }
+}
+
+private struct MetricRow: View {
+    let title: String
+    @Binding var value: String
+    let editMode: Bool
+    var keyboardType: UIKeyboardType = .default
+    @Environment(\.theme) var theme
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(theme.secondaryFont)
+                .foregroundColor(.orange)
+                .frame(width: 80, alignment: .leading)
+            
+            if editMode {
+                TextField(title, text: $value)
+                    .font(theme.secondaryFont)
+                    .foregroundColor(.white)
+                    .keyboardType(keyboardType)
+            } else {
+                Text(value)
+                    .font(theme.secondaryFont)
+                    .foregroundColor(.white)
+            }
+        }
     }
 }
 
