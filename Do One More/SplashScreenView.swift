@@ -6,6 +6,7 @@ struct SplashScreenView: View {
     @State private var doNotShowAgain = false
     @State private var showMainApp = false
     @Environment(\.theme) var theme
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         if showMainApp || hasSeenSplashScreen {

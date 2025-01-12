@@ -10,6 +10,8 @@ struct ContentView: View {
     var clearExistingRecords: Bool = false
     @Environment(\.theme) var theme
     @EnvironmentObject private var quoteManager: QuoteManager
+    @State private var showingSplashScreen = false
+    @Environment(\.dismiss) var dismiss
 
     var hasValidInput: Bool {
         for record in exerciseRecords {
@@ -103,6 +105,13 @@ struct ContentView: View {
                         UserDefaultsManager.saveExerciseRecords(exerciseRecords)
                     }
                 }
+                .navigationBarItems(trailing: 
+                    NavigationLink(destination: HowToView()) {
+                        Image(systemName: "questionmark.circle")
+                            .foregroundColor(.orange)
+                            .font(.title2)
+                    }
+                )
             }
         }
         .onDisappear {
