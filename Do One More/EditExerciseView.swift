@@ -145,12 +145,18 @@ struct EditExerciseView: View {
 
         // Update the existing exercise with the new data
         if let index = exercises.firstIndex(where: { $0.id == exercise.id }) {
+            let oldName = exercises[index].name  // Store the old name
             exercises[index] = Exercise(
                 name: exerciseName,
                 selectedMetrics: orderedMetrics,
                 category: selectedCategory
             )
             UserDefaultsManager.saveExercises(exercises)
+            
+            // Update the exercise name in all routines
+            if oldName != exerciseName {
+                UserDefaultsManager.updateExerciseNameInRoutines(oldName: oldName, newName: exerciseName)
+            }
         }
 
         presentationMode.wrappedValue.dismiss()

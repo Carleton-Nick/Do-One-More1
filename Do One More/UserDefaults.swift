@@ -95,4 +95,25 @@ class UserDefaultsManager {
     static func clearRoutines() {
         UserDefaults.standard.removeObject(forKey: "routines")
     }
+
+    static func updateExerciseNameInRoutines(oldName: String, newName: String) {
+        var routines = loadRoutines()
+        
+        for i in 0..<routines.count {
+            var updatedItems = routines[i].items
+            for j in 0..<updatedItems.count {
+                if case .exercise(let exercise) = updatedItems[j],
+                   exercise.name == oldName {
+                    updatedItems[j] = .exercise(Exercise(
+                        name: newName,
+                        selectedMetrics: exercise.selectedMetrics,
+                        category: exercise.category
+                    ))
+                }
+            }
+            routines[i].items = updatedItems
+        }
+        
+        saveRoutines(routines)
+    }
 }
