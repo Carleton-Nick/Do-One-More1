@@ -38,5 +38,5 @@ enum ExerciseMetric: String, CaseIterable, Codable, Hashable, Identifiable {
     case calories = "Calories"
     case custom = "Custom Notes"
 
-    var id: String { self.rawValue } // Conformance to Identifiable using rawValue as the ID
+    var id: String { self.rawValue }
 }

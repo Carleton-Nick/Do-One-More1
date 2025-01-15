@@ -140,11 +140,14 @@ struct EditExerciseView: View {
             return
         }
 
+        // Create an ordered array of selected metrics
+        let orderedMetrics = ExerciseMetric.allCases.filter { selectedMetrics.contains($0) }
+
         // Update the existing exercise with the new data
         if let index = exercises.firstIndex(where: { $0.id == exercise.id }) {
             exercises[index] = Exercise(
                 name: exerciseName,
-                selectedMetrics: Array(selectedMetrics),
+                selectedMetrics: orderedMetrics,
                 category: selectedCategory
             )
             UserDefaultsManager.saveExercises(exercises)
