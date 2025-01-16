@@ -7,11 +7,17 @@ struct ContentView: View {
     @State private var showAlert = false
     @State private var showingNewExerciseView = false
     var fromRoutine: Bool = false
-    var clearExistingRecords: Bool = false
     @Environment(\.theme) var theme
     @EnvironmentObject private var quoteManager: QuoteManager
-    @State private var showingSplashScreen = false
-    @Environment(\.dismiss) var dismiss
+    
+    // Add this to track whether the view has been properly initialized
+    @State private var isViewInitialized = false
+    
+    init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false) {
+        self._exercises = State(initialValue: exercises)
+        self._exerciseRecords = State(initialValue: exerciseRecords)
+        self.fromRoutine = fromRoutine
+    }
 
     var hasValidInput: Bool {
         for record in exerciseRecords {
@@ -39,25 +45,36 @@ struct ContentView: View {
         return false
     }
 
-    init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false, clearExistingRecords: Bool = false) {
-        self._exerciseRecords = State(initialValue: exerciseRecords)
-        self.fromRoutine = fromRoutine
-        self.clearExistingRecords = clearExistingRecords
-    }
-
     var body: some View {
         NavigationStack {
             ZStack {
                 theme.backgroundColor.edgesIgnoringSafeArea(.all)
-                VStack {
-                    // Motivational Quote at the top
+                
+                VStack(spacing: 0) {
                     if quoteManager.showQuote {
                         MotivationalQuoteView(quote: quoteManager.currentQuote ?? "")
                             .padding(.top, 10)
                     }
                     
-                    VStack {
-                        exerciseRecordsList() // List of Exercise Records
+                    if isViewInitialized {  // Only show content after initialization
+                        VStack {
+                            ScrollView {
+                                VStack(spacing: 20) {
+                                    ForEach(Array($exerciseRecords.enumerated()), id: \.offset) { index, $exerciseRecord in
+                                        ExerciseRecordView(
+                                            exerciseRecord: $exerciseRecord,
+                                            exercises: exercises,
+                                            exerciseRecords: $exerciseRecords,
+                                            index: index,
+                                            theme: theme,
+                                            createTextField: createTextField,
+                                            findMostRecentWorkout: findMostRecentWorkout(for:)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.top, 10)
                     }
                     
                     Spacer()
@@ -83,26 +100,33 @@ struct ContentView: View {
                         quoteManager.resumeTimer()
                     }
                     exercises = UserDefaultsManager.loadExercises()
-                    
                     savedWorkouts = UserDefaultsManager.loadWorkouts()
+                    
                     if fromRoutine {
-                        // Load existing records and append the new one
+                        // Load existing records
                         var currentRecords = UserDefaultsManager.loadExerciseRecords()
+                        
                         if currentRecords.isEmpty || (currentRecords.count == 1 && currentRecords[0].selectedExerciseType.isEmpty) {
                             currentRecords = exerciseRecords
                         } else {
-                            // Only append if the exercise isn't already in the records
                             let newExercise = exerciseRecords[0].selectedExerciseType
                             if !currentRecords.contains(where: { $0.selectedExerciseType == newExercise }) {
                                 currentRecords.append(contentsOf: exerciseRecords)
                             }
                         }
+                        
                         exerciseRecords = currentRecords
                         UserDefaultsManager.saveExerciseRecords(currentRecords)
+                    } else {
+                        exerciseRecords = UserDefaultsManager.loadExerciseRecords()
+                        if exerciseRecords.isEmpty || (!fromRoutine && !exerciseRecords[0].selectedExerciseType.isEmpty) {
+                            exerciseRecords = [ExerciseRecord()]
+                        }
                     }
-                    if clearExistingRecords {
-                        // Clear any saved records when coming from routine
-                        UserDefaultsManager.saveExerciseRecords(exerciseRecords)
+                    
+                    // Set initialization flag after all state is set up
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isViewInitialized = true
                     }
                 }
                 .navigationBarItems(trailing: 

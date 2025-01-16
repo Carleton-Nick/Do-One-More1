@@ -23,8 +23,7 @@ struct RoutineDetailView: View {
                                 destination: ContentView(
                                     exercises: exercises,
                                     exerciseRecords: [ExerciseRecord(selectedExerciseType: exercise.name)],
-                                    fromRoutine: true,
-                                    clearExistingRecords: true
+                                    fromRoutine: true
                                 )
                             ) {
                                 exerciseRow(exercise: exercise)
@@ -117,7 +116,7 @@ struct RoutineDetailView: View {
     
     private func createShareableRoutine() -> String {
         // Create a simple text representation of the routine
-        var routineText = "Exercise Routine: \(routine.name)\n\n"
+        var routineText = "Exercise Routine: \(routine.name)\n"
         
         for item in routine.items {
             switch item {
