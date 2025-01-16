@@ -17,57 +17,55 @@ struct ExerciseListView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                // Title with Underline
-                UnderlinedTitle(title: "Exercises")
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.bottom, 20)
+        VStack {
+            // Title with Underline
+            UnderlinedTitle(title: "Exercises")
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 20)
 
-                List {
-                    ForEach(groupedExercises, id: \.0) { category, exercises in
-                        if !exercises.isEmpty {
-                            Section(header: Text(category.rawValue)
-                                .font(theme.primaryFont)
-                                .foregroundColor(theme.primaryColor)
-                            ) {
-                                ForEach(exercises) { exercise in
-                                    ExerciseRow(exercise: exercise)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            exerciseToEdit = exercise
-                                        }
-                                }
-                                .onDelete { indexSet in
-                                    deleteExercise(category: category, at: indexSet)
-                                }
+            List {
+                ForEach(groupedExercises, id: \.0) { category, exercises in
+                    if !exercises.isEmpty {
+                        Section(header: Text(category.rawValue)
+                            .font(theme.primaryFont)
+                            .foregroundColor(theme.primaryColor)
+                        ) {
+                            ForEach(exercises) { exercise in
+                                ExerciseRow(exercise: exercise)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        exerciseToEdit = exercise
+                                    }
+                            }
+                            .onDelete { indexSet in
+                                deleteExercise(category: category, at: indexSet)
                             }
                         }
                     }
                 }
-                .listStyle(InsetListStyle())
-                .background(theme.backgroundColor)
-                .scrollContentBackground(.hidden)
+            }
+            .listStyle(InsetListStyle())
+            .background(theme.backgroundColor)
+            .scrollContentBackground(.hidden)
 
-                Spacer()
+            Spacer()
 
-                // Add Exercise Button
-                Button(action: { showingNewExerciseView = true }) {
-                    Text("Add Exercise")
-                        .customButtonStyle()
-                }
-                .padding(.bottom)
+            // Add Exercise Button
+            Button(action: { showingNewExerciseView = true }) {
+                Text("Add Exercise")
+                    .customButtonStyle()
             }
-            .background(theme.backgroundColor.edgesIgnoringSafeArea(.all))
-            .sheet(isPresented: $showingNewExerciseView) {
-                NewExerciseView(exercises: $exercises)
-            }
-            .sheet(item: $exerciseToEdit) { exercise in
-                EditExerciseView(
-                    exercise: $exercises[exercises.firstIndex(of: exercise)!],
-                    exercises: $exercises
-                )
-            }
+            .padding(.bottom)
+        }
+        .background(theme.backgroundColor.edgesIgnoringSafeArea(.all))
+        .sheet(isPresented: $showingNewExerciseView) {
+            NewExerciseView(exercises: $exercises)
+        }
+        .sheet(item: $exerciseToEdit) { exercise in
+            EditExerciseView(
+                exercise: $exercises[exercises.firstIndex(of: exercise)!],
+                exercises: $exercises
+            )
         }
     }
 

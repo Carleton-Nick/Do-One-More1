@@ -4,6 +4,8 @@ struct RoutineDetailView: View {
     var routine: Routine
     var exercises: [Exercise]
     @Binding var routines: [Routine]
+    @Binding var navigationPath: NavigationPath
+    var onExerciseSelected: (Exercise) -> Void
     @State private var showingShareSheet = false
     @Environment(\.theme) var theme
 
@@ -19,13 +21,9 @@ struct RoutineDetailView: View {
                     ForEach(Array(routine.items.enumerated()), id: \.offset) { index, item in
                         switch item {
                         case .exercise(let exercise):
-                            NavigationLink(
-                                destination: ContentView(
-                                    exercises: exercises,
-                                    exerciseRecords: [ExerciseRecord(selectedExerciseType: exercise.name)],
-                                    fromRoutine: true
-                                )
-                            ) {
+                            Button(action: {
+                                onExerciseSelected(exercise)
+                            }) {
                                 exerciseRow(exercise: exercise)
                             }
                         case .header(let name):
@@ -145,7 +143,9 @@ struct RoutineDetailView_Previews: PreviewProvider {
                 ]
             ),
             exercises: [Exercise(name: "Bench Press", selectedMetrics: [], category: .chest)],
-            routines: .constant([])
+            routines: .constant([]),
+            navigationPath: .constant(NavigationPath()),
+            onExerciseSelected: { _ in }
         )
         .environment(\.theme, AppTheme())
     }

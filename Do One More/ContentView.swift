@@ -1,22 +1,28 @@
 import SwiftUI
 
+enum NavigationDestination: Hashable {
+    case routineList
+    case routineDetail(Routine)
+    case exerciseList
+    case workoutList
+}
+
 struct ContentView: View {
     @State var exercises: [Exercise] = []
     @State var exerciseRecords: [ExerciseRecord]
     @State var savedWorkouts: [Workout] = []
     @State private var showAlert = false
     @State private var showingNewExerciseView = false
-    var fromRoutine: Bool = false
+    @State private var navigationPath = NavigationPath()
+    @State private var isViewInitialized = false
     @Environment(\.theme) var theme
     @EnvironmentObject private var quoteManager: QuoteManager
+    @State private var showBackButton = false
+    @State private var selectedRoutine: Routine? = nil
     
-    // Add this to track whether the view has been properly initialized
-    @State private var isViewInitialized = false
-    
-    init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()], fromRoutine: Bool = false) {
+    init(exercises: [Exercise], exerciseRecords: [ExerciseRecord] = [ExerciseRecord()]) {
         self._exercises = State(initialValue: exercises)
         self._exerciseRecords = State(initialValue: exerciseRecords)
-        self.fromRoutine = fromRoutine
     }
 
     var hasValidInput: Bool {
@@ -46,7 +52,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack {
                 theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 
@@ -93,7 +99,28 @@ struct ContentView: View {
                 }
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    toolbarItems()
+                    ToolbarItem(placement: .principal) {
+                        UnderlinedTitle(title: "Do One More")
+                    }
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        HStack {
+                            if showBackButton {
+                                Button(action: {
+                                    if let routine = selectedRoutine {
+                                        navigationPath.append(NavigationDestination.routineDetail(routine))
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "chevron.left")
+                                            .foregroundColor(.white)
+                                        Text("Back")
+                                            .foregroundColor(theme.primaryColor)
+                                    }
+                                }
+                            }
+                            MenuView(exercises: $exercises, theme: theme, navigationPath: $navigationPath)
+                        }
+                    }
                 }
                 .onAppear {
                     if !quoteManager.isTimerRunning {
@@ -102,26 +129,10 @@ struct ContentView: View {
                     exercises = UserDefaultsManager.loadExercises()
                     savedWorkouts = UserDefaultsManager.loadWorkouts()
                     
-                    if fromRoutine {
-                        // Load existing records
-                        var currentRecords = UserDefaultsManager.loadExerciseRecords()
-                        
-                        if currentRecords.isEmpty || (currentRecords.count == 1 && currentRecords[0].selectedExerciseType.isEmpty) {
-                            currentRecords = exerciseRecords
-                        } else {
-                            let newExercise = exerciseRecords[0].selectedExerciseType
-                            if !currentRecords.contains(where: { $0.selectedExerciseType == newExercise }) {
-                                currentRecords.append(contentsOf: exerciseRecords)
-                            }
-                        }
-                        
-                        exerciseRecords = currentRecords
-                        UserDefaultsManager.saveExerciseRecords(currentRecords)
-                    } else {
-                        exerciseRecords = UserDefaultsManager.loadExerciseRecords()
-                        if exerciseRecords.isEmpty || (!fromRoutine && !exerciseRecords[0].selectedExerciseType.isEmpty) {
-                            exerciseRecords = [ExerciseRecord()]
-                        }
+                    // Load existing records or create new ones
+                    exerciseRecords = UserDefaultsManager.loadExerciseRecords()
+                    if exerciseRecords.isEmpty {
+                        exerciseRecords = [ExerciseRecord()]
                     }
                     
                     // Set initialization flag after all state is set up
@@ -137,13 +148,38 @@ struct ContentView: View {
                     }
                 )
             }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                switch destination {
+                case .routineList:
+                    RoutineListView(navigationPath: $navigationPath)
+                case .routineDetail(let routine):
+                    RoutineDetailView(
+                        routine: routine,
+                        exercises: exercises,
+                        routines: .constant([]),
+                        navigationPath: $navigationPath,
+                        onExerciseSelected: { exercise in
+                            if exerciseRecords.isEmpty || exerciseRecords[0].selectedExerciseType.isEmpty {
+                                exerciseRecords = [ExerciseRecord(selectedExerciseType: exercise.name)]
+                            } else {
+                                exerciseRecords.append(ExerciseRecord(selectedExerciseType: exercise.name))
+                            }
+                            selectedRoutine = routine
+                            navigationPath.removeLast(navigationPath.count)
+                            showBackButton = true
+                        }
+                    )
+                case .exerciseList:
+                    ExerciseListView(exercises: $exercises)
+                case .workoutList:
+                    WorkoutListView()
+                }
+            }
         }
         .onDisappear {
-            if !fromRoutine {
-                quoteManager.pauseTimer()
-                // Clear the saved records when leaving the main view (not from routine)
-                UserDefaultsManager.saveExerciseRecords([ExerciseRecord()])
-            }
+            quoteManager.pauseTimer()
+            // Clear the saved records when leaving the main view
+            UserDefaultsManager.saveExerciseRecords([ExerciseRecord()])
         }
     }
     
@@ -173,7 +209,7 @@ struct ContentView: View {
                 UnderlinedTitle(title: "Do One More")
             }
             ToolbarItem(placement: .navigationBarLeading) {
-                MenuView(exercises: $exercises, theme: theme)
+                MenuView(exercises: $exercises, theme: theme, navigationPath: $navigationPath)
             }
         }
     }
@@ -392,22 +428,23 @@ struct ContentView: View {
 struct MenuView: View {
     @Binding var exercises: [Exercise]
     var theme: AppTheme
+    @Binding var navigationPath: NavigationPath
 
     var body: some View {
         Menu {
-            NavigationLink(destination: ExerciseListView(exercises: $exercises)) {
+            Button(action: { navigationPath.append(NavigationDestination.exerciseList) }) {
                 Text("Exercises")
             }
-            NavigationLink(destination: RoutineListView()) {
+            Button(action: { navigationPath.append(NavigationDestination.routineList) }) {
                 Text("Routines")
             }
-            NavigationLink(destination: WorkoutListView()) {
+            Button(action: { navigationPath.append(NavigationDestination.workoutList) }) {
                 Text("View Past Workouts")
             }
         } label: {
             Label("Menu", systemImage: "line.3.horizontal")
                 .foregroundColor(theme.buttonTextColor)
-                .preferredColorScheme(.dark) // Force dark mode for the menu
+                .preferredColorScheme(.dark)
         }
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct RoutineListView: View {
     @State private var routines: [Routine] = []
     @State private var exercises: [Exercise] = UserDefaultsManager.loadExercises()
+    @Binding var navigationPath: NavigationPath
     @Environment(\.theme) var theme
     @State private var showingCreateRoutineView = false
     
@@ -46,29 +47,26 @@ struct RoutineListView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                theme.backgroundColor.edgesIgnoringSafeArea(.all)
-                
-                VStack {
-                    if routines.isEmpty {
-                        EmptyRoutineView()
-                    } else {
-                        RoutineListContentView(
-                            routines: routines,
-                            exercises: exercises,
-                            routinesBinding: $routines
-                        )
-                    }
+        ZStack {
+            theme.backgroundColor.edgesIgnoringSafeArea(.all)
+            VStack {
+                if routines.isEmpty {
+                    EmptyRoutineView()
+                } else {
+                    RoutineListContentView(
+                        routines: routines,
+                        exercises: exercises,
+                        routinesBinding: $routines,
+                        navigationPath: $navigationPath
+                    )
                 }
-                
-                CreateRoutineButton(showingCreateRoutineView: $showingCreateRoutineView)
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .safeAreaInset(edge: .top) {
-                UnderlinedTitle(title: "Routines")
-                    .background(theme.backgroundColor)
-            }
+            CreateRoutineButton(showingCreateRoutineView: $showingCreateRoutineView)
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .top) {
+            UnderlinedTitle(title: "Routines")
+                .background(theme.backgroundColor)
         }
         .sheet(isPresented: $showingCreateRoutineView) {
             CreateRoutineView(
@@ -95,6 +93,7 @@ private struct RoutineListContentView: View {
     let routines: [Routine]
     let exercises: [Exercise]
     @Binding var routinesBinding: [Routine]
+    @Binding var navigationPath: NavigationPath
     @Environment(\.theme) var theme
     
     var body: some View {
@@ -104,7 +103,8 @@ private struct RoutineListContentView: View {
                     RoutineRowView(
                         routine: routine,
                         exercises: exercises,
-                        routines: $routinesBinding
+                        routines: $routinesBinding,
+                        navigationPath: $navigationPath
                     )
                 }
             }
@@ -117,6 +117,7 @@ private struct RoutineRowView: View {
     let routine: Routine
     let exercises: [Exercise]
     @Binding var routines: [Routine]
+    @Binding var navigationPath: NavigationPath
     @Environment(\.theme) var theme
     
     var body: some View {
@@ -126,13 +127,9 @@ private struct RoutineRowView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            NavigationLink {
-                RoutineDetailView(
-                    routine: routine,
-                    exercises: exercises,
-                    routines: $routines
-                )
-            } label: {
+            Button(action: {
+                navigationPath.append(NavigationDestination.routineDetail(routine))
+            }) {
                 Text("View")
                     .font(theme.secondaryFont)
                     .foregroundColor(theme.buttonTextColor)
@@ -191,7 +188,7 @@ private struct CreateRoutineButton: View {
 struct RoutineListView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            RoutineListView()
+            RoutineListView(navigationPath: .constant(NavigationPath()))
                 .environment(\.theme, AppTheme())
         }
     }
